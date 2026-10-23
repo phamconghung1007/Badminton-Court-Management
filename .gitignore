@@ -1,0 +1,18 @@
+## Visual Studio / .NET .gitignore
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Secrets and local config (as requested in specifications)
+appsettings.json
+!appsettings.example.json
+
+# Logs & temp
+*.log
+TestResults/
+.DS_Store
+Thumbs.db
