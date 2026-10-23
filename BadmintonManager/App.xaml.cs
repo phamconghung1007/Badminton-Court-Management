@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using BadmintonManager.Common;
 using BadmintonManager.Data;
@@ -82,12 +83,30 @@ public partial class App : Application
             {
                 await db.Database.MigrateAsync();
                 await DbSeeder.SeedAsync(db);
-            }
 
-            if (e.Args.Contains("--seed-only"))
-            {
-                Shutdown(0);
-                return;
+                if (e.Args.Contains("--seed-only"))
+                {
+                    Shutdown(0);
+                    return;
+                }
+
+                if (e.Args.Contains("--verify-dod"))
+                {
+                    var report = await DbHealthChecker.VerifyDay1DoDAsync(db);
+                    Console.WriteLine("==================================================");
+                    Console.WriteLine("      BÁO CÁO KIỂM TRA ĐẠT TIÊU CHÍ NGÀY 1 (DoD)  ");
+                    Console.WriteLine("==================================================");
+                    foreach (var item in report.Items)
+                    {
+                        string status = item.IsPassed ? "[PASS]" : "[FAIL]";
+                        Console.WriteLine($"{status} {item.Category}: {item.Description} -> {item.Details}");
+                    }
+                    Console.WriteLine("==================================================");
+                    Console.WriteLine($"KẾT QUẢ TỔNG QUAN: {(report.IsAllPassed ? "ĐẠT TOÀN BỘ TIÊU CHÍ NGÀY 1 (DoD SUCCESS)!" : "CẦN KIỂM TRA LẠI")}");
+                    Console.WriteLine("==================================================");
+                    Shutdown(report.IsAllPassed ? 0 : 1);
+                    return;
+                }
             }
 
             ShowLogin();
@@ -95,7 +114,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             MessageBox.Show($"Lỗi khởi động cơ sở dữ liệu: {ex.Message}", "Lỗi Khởi Động", MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown();
+            Shutdown(1);
         }
     }
 
