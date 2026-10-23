@@ -1,7 +1,5 @@
 # Badminton Court Management System (Hệ Thống Quản Lý Sân Cầu Lông)
 
-Dự án đồ án / CV ứng tuyển vị trí Thực tập sinh .NET / Desktop Developer.
-
 ## 🛠 Công nghệ sử dụng
 - **Ngôn ngữ**: C# (.NET 8)
 - **Giao diện**: WPF (XAML), MVVM Pattern với `CommunityToolkit.Mvvm`
