@@ -38,8 +38,8 @@ public class AuthService : IAuthService
                 .ThenInclude(c => c!.MembershipTier)
             .FirstOrDefaultAsync(u => u.Username == request.Username);
 
-        // Section 8.5: Kiểm tra IsActive, BCrypt.Verify, báo lỗi chung không tiết lộ lý do
-        if (user == null || !user.IsActive)
+        // Section 8.5: Báo lỗi chung không tiết lộ người dùng có tồn tại hay không
+        if (user == null)
         {
             throw new BusinessException("Sai tên đăng nhập hoặc mật khẩu.");
         }
@@ -48,6 +48,12 @@ public class AuthService : IAuthService
         if (!verified)
         {
             throw new BusinessException("Sai tên đăng nhập hoặc mật khẩu.");
+        }
+
+        // Nếu mật khẩu đúng nhưng tài khoản bị khóa/vô hiệu hóa
+        if (!user.IsActive)
+        {
+            throw new BusinessException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
         }
 
         user.LastLoginAt = DateTime.Now;
