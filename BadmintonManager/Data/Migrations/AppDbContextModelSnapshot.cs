@@ -490,7 +490,10 @@ namespace BadmintonManager.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PriceRules", (string)null);
+                    b.ToTable("PriceRules", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PriceRule_Minutes", "[StartMinute] >= 0 AND [EndMinute] <= 1440 AND [EndMinute] > [StartMinute]");
+                        });
                 });
 
             modelBuilder.Entity("BadmintonManager.Models.Entities.SystemSetting", b =>

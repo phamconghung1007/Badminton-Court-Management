@@ -8,7 +8,10 @@ public class PriceRuleConfiguration : IEntityTypeConfiguration<PriceRule>
 {
     public void Configure(EntityTypeBuilder<PriceRule> builder)
     {
-        builder.ToTable("PriceRules");
+        builder.ToTable("PriceRules", t =>
+        {
+            t.HasCheckConstraint("CK_PriceRule_Minutes", "[StartMinute] >= 0 AND [EndMinute] <= 1440 AND [EndMinute] > [StartMinute]");
+        });
 
         builder.HasKey(p => p.Id);
 
