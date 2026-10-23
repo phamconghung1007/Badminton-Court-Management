@@ -98,7 +98,7 @@ dotnet run --project BadmintonManager/BadmintonManager.csproj
 ---
 
 ## 📐 Các quy tắc nghiệp vụ nổi bật (Business Rules)
-- **Chống trùng lịch và quy tắc khoảng trống (BR-03 & BR-04)**: Kiểm tra không cho phép khoảng trống đúng 30 phút giữa các ca đặt sân để tránh lãng phí tài nguyên sân.
+- **Chống trùng lịch và quy tắc khoảng trống**: Kiểm tra không cho phép khoảng trống đúng 30 phút giữa các ca đặt sân để tránh lãng phí tài nguyên sân.
 - **Transaction an toàn (BR-06)**: Kiểm tra và lưu booking trong Database Transaction (IsolationLevel Serializable) kết hợp concurrency token `RowVersion` nhằm chống race condition khi nhiều người cùng đặt 1 sân.
-- **Tính giá theo từng block 30 phút (BR-07 & BR-08)**: Hỗ trợ booking vắt qua nhiều khung giá khác nhau (giờ vàng / giờ thường, thứ trong tuần / cuối tuần).
+- **Tính giá theo từng block 30 phút**: Hỗ trợ booking vắt qua nhiều khung giá khác nhau (giờ vàng / giờ thường, thứ trong tuần / cuối tuần).
 - **Phân quyền và bảo mật tại tầng Service**: Mọi thao tác truy vấn dữ liệu của Manager/Staff đều được tự động lọc theo `BranchId` của tài khoản đang đăng nhập trong `CurrentUserContext`.
