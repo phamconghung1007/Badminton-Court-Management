@@ -63,12 +63,21 @@ public partial class App : Application
                 services.AddTransient<RegisterViewModel>();
                 services.AddTransient<ShellViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Shared.UserProfileViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Admin.AdminDashboardViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Manager.ManagerDashboardViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Staff.StaffDashboardViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Customer.CustomerDashboardViewModel>();
 
                 // Windows & Pages
                 services.AddTransient<LoginWindow>();
                 services.AddTransient<RegisterWindow>();
                 services.AddTransient<ShellWindow>();
                 services.AddTransient<BadmintonManager.Views.Pages.UserProfilePage>();
+                services.AddTransient<BadmintonManager.Views.Pages.AdminDashboardPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.ManagerDashboardPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.StaffDashboardPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.CustomerDashboardPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.PlaceholderPageView>();
             })
             .Build();
     }
