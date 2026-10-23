@@ -60,10 +60,12 @@ public partial class App : Application
 
                 // ViewModels
                 services.AddTransient<LoginViewModel>();
+                services.AddTransient<RegisterViewModel>();
                 services.AddTransient<ShellViewModel>();
 
                 // Windows
                 services.AddTransient<LoginWindow>();
+                services.AddTransient<RegisterWindow>();
                 services.AddTransient<ShellWindow>();
             })
             .Build();
@@ -122,6 +124,26 @@ public partial class App : Application
     {
         var loginVm = _host.Services.GetRequiredService<LoginViewModel>();
         var loginWindow = new LoginWindow(loginVm);
+
+        loginVm.RegisterRequested += () =>
+        {
+            var registerVm = _host.Services.GetRequiredService<RegisterViewModel>();
+            var registerWindow = new RegisterWindow(registerVm);
+
+            registerVm.RegistrationSucceeded += () =>
+            {
+                registerWindow.Close();
+            };
+
+            registerVm.CancelRequested += () =>
+            {
+                registerWindow.Close();
+            };
+
+            loginWindow.Hide();
+            registerWindow.ShowDialog();
+            loginWindow.Show();
+        };
 
         loginVm.LoginSucceeded += () =>
         {
