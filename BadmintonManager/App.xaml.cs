@@ -62,11 +62,13 @@ public partial class App : Application
                 services.AddTransient<LoginViewModel>();
                 services.AddTransient<RegisterViewModel>();
                 services.AddTransient<ShellViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Shared.UserProfileViewModel>();
 
-                // Windows
+                // Windows & Pages
                 services.AddTransient<LoginWindow>();
                 services.AddTransient<RegisterWindow>();
                 services.AddTransient<ShellWindow>();
+                services.AddTransient<BadmintonManager.Views.Pages.UserProfilePage>();
             })
             .Build();
     }
