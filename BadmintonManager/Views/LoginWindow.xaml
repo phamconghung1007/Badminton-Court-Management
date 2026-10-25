@@ -57,7 +57,16 @@
                         Content="ĐĂNG NHẬP"
                         Height="44"
                         Style="{StaticResource PrimaryButtonStyle}"
-                        Margin="0,0,0,16"/>
+                        Margin="0,0,0,12"/>
+
+                <!-- Register Link Button -->
+                <Button Command="{Binding OpenRegisterCommand}"
+                        Content="Chưa có tài khoản? Đăng ký ngay"
+                        Height="32"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Foreground="{StaticResource PrimaryBrush}"
+                        FontSize="12"
+                        Margin="0,0,0,12"/>
 
                 <!-- Loading Indicator -->
                 <ProgressBar IsIndeterminate="True"

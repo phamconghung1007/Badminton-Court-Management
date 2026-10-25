@@ -21,6 +21,7 @@ public partial class LoginViewModel : ViewModelBase
     private string _password = string.Empty;
 
     public event Action? LoginSucceeded;
+    public event Action? RegisterRequested;
 
     public LoginViewModel(IAuthService authService, IDialogService dialogService)
     {
@@ -33,7 +34,7 @@ public partial class LoginViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
         {
-            _dialogService.ShowWarning("Vui lòng nhập tên đăng nhập và mật khẩu.");
+            _dialogService.ShowWarning("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.");
             return;
         }
 
@@ -41,6 +42,12 @@ public partial class LoginViewModel : ViewModelBase
         {
             await _authService.LoginAsync(new LoginRequest(Username.Trim(), Password));
             LoginSucceeded?.Invoke();
-        }, _dialogService, "Đang đăng nhập...");
+        }, _dialogService, "Đang xác thực tài khoản...");
+    }
+
+    [RelayCommand]
+    private void OpenRegister()
+    {
+        RegisterRequested?.Invoke();
     }
 }
