@@ -1,0 +1,83 @@
+<UserControl x:Class="BadmintonManager.Views.Pages.AdminDashboardPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900"
+             Loaded="UserControl_Loaded">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,24">
+                <TextBlock Text="Bảng điều khiển Quản trị viên (Admin)"
+                           FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="Tổng quan toàn bộ hệ thống các cơ sở, sân, tài khoản &amp; doanh thu"
+                           FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- Stat Cards Row -->
+            <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,24">
+                <!-- Branches Card -->
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="Domain" Width="28" Height="28" Foreground="{StaticResource RoleManagerBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Tổng cơ sở" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TotalBranches, StringFormat='{}{0}'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Courts Card -->
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="6,0,6,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="Grid" Width="28" Height="28" Foreground="{StaticResource PrimaryLightBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Tổng số sân" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TotalCourts, StringFormat='{}{0} sân'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bookings Card -->
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="6,0,6,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="CalendarCheck" Width="28" Height="28" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Tổng lượt đặt" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TotalBookings, StringFormat='{}{0}'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Revenue Card -->
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="12,0,0,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="{StaticResource RoleCustomerBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Doanh thu hệ thống" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TotalRevenue, Converter={StaticResource MoneyConverter}}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Info Box -->
+            <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}">
+                <StackPanel>
+                    <TextBlock Text="📌 Thông tin vận hành &amp; phân quyền Quản trị viên"
+                               FontWeight="Bold" FontSize="15" Margin="0,0,0,12"/>
+                    <TextBlock Text="• Quản lý danh mục 3 cơ sở (Cầu Giấy, Đống Đa, Thanh Xuân) và 18 sân tiêu chuẩn."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="• Quản lý tài khoản Manager và phân quyền trực tiếp cho từng cơ sở."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="• Cấu hình bảng giá gốc toàn hệ thống phủ kín 06:00 đến 24:00 (Ngày thường &amp; Cuối tuần)."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="• Xem báo cáo phân tích doanh thu so sánh giữa các cơ sở bằng biểu đồ LiveCharts."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

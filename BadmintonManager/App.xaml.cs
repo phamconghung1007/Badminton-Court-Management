@@ -60,11 +60,24 @@ public partial class App : Application
 
                 // ViewModels
                 services.AddTransient<LoginViewModel>();
+                services.AddTransient<RegisterViewModel>();
                 services.AddTransient<ShellViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Shared.UserProfileViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Admin.AdminDashboardViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Manager.ManagerDashboardViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Staff.StaffDashboardViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Customer.CustomerDashboardViewModel>();
 
-                // Windows
+                // Windows & Pages
                 services.AddTransient<LoginWindow>();
+                services.AddTransient<RegisterWindow>();
                 services.AddTransient<ShellWindow>();
+                services.AddTransient<BadmintonManager.Views.Pages.UserProfilePage>();
+                services.AddTransient<BadmintonManager.Views.Pages.AdminDashboardPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.ManagerDashboardPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.StaffDashboardPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.CustomerDashboardPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.PlaceholderPageView>();
             })
             .Build();
     }
@@ -122,6 +135,26 @@ public partial class App : Application
     {
         var loginVm = _host.Services.GetRequiredService<LoginViewModel>();
         var loginWindow = new LoginWindow(loginVm);
+
+        loginVm.RegisterRequested += () =>
+        {
+            var registerVm = _host.Services.GetRequiredService<RegisterViewModel>();
+            var registerWindow = new RegisterWindow(registerVm);
+
+            registerVm.RegistrationSucceeded += () =>
+            {
+                registerWindow.Close();
+            };
+
+            registerVm.CancelRequested += () =>
+            {
+                registerWindow.Close();
+            };
+
+            loginWindow.Hide();
+            registerWindow.ShowDialog();
+            loginWindow.Show();
+        };
 
         loginVm.LoginSucceeded += () =>
         {

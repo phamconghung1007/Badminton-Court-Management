@@ -1,0 +1,85 @@
+<UserControl x:Class="BadmintonManager.Views.Pages.ManagerDashboardPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900"
+             Loaded="UserControl_Loaded">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,24">
+                <TextBlock Text="Bảng điều khiển Quản lý cơ sở (Manager)"
+                           FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                    <TextBlock Text="Cơ sở đang quản lý: " FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding BranchName}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource PrimaryLightBrush}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Stat Cards Row -->
+            <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,24">
+                <!-- Courts in Branch Card -->
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="Grid" Width="28" Height="28" Foreground="{StaticResource PrimaryLightBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Sân thuộc cơ sở" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding CourtCount, StringFormat='{}{0} sân'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Staff in Branch Card -->
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="6,0,6,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="AccountTie" Width="28" Height="28" Foreground="{StaticResource RoleStaffBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Nhân viên cơ sở" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding StaffCount, StringFormat='{}{0} người'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bookings in Branch Card -->
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="6,0,6,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="CalendarCheck" Width="28" Height="28" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Tổng lượt đặt sân" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding BookingCount, StringFormat='{}{0}'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Revenue in Branch Card -->
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="12,0,0,0">
+                    <StackPanel>
+                        <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="{StaticResource RoleCustomerBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Doanh thu cơ sở" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding BranchRevenue, Converter={StaticResource MoneyConverter}}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Info Box -->
+            <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}">
+                <StackPanel>
+                    <TextBlock Text="📌 Quyền hạn Quản lý cơ sở theo tài liệu kỹ thuật"
+                               FontWeight="Bold" FontSize="15" Margin="0,0,0,12"/>
+                    <TextBlock Text="• Giới hạn hiển thị: Dữ liệu sân, nhân viên, lịch đặt và doanh thu chỉ hiển thị trong phạm vi cơ sở được phân công."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="• Quản lý tài khoản nhân viên (Staff) trực thuộc cơ sở."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="• Xem ma trận lịch đặt sân trực quan theo ngày/tuần, nhận đặt sân tại quầy hoặc phê duyệt thanh toán."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="• Xuất báo cáo doanh thu &amp; công suất sử dụng sân theo tuần/tháng/năm sang Excel."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

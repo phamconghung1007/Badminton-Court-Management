@@ -4,12 +4,41 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:adminVm="clr-namespace:BadmintonManager.ViewModels.Admin"
+        xmlns:mgrVm="clr-namespace:BadmintonManager.ViewModels.Manager"
+        xmlns:staffVm="clr-namespace:BadmintonManager.ViewModels.Staff"
+        xmlns:custVm="clr-namespace:BadmintonManager.ViewModels.Customer"
+        xmlns:sharedVm="clr-namespace:BadmintonManager.ViewModels.Shared"
+        xmlns:baseVm="clr-namespace:BadmintonManager.ViewModels.Base"
+        xmlns:pages="clr-namespace:BadmintonManager.Views.Pages"
         mc:Ignorable="d"
         Title="Hệ Thống Quản Lý Sân Cầu Lông"
-        Height="800" Width="1280"
-        MinHeight="700" MinWidth="1000"
+        Height="850" Width="1360"
+        MinHeight="720" MinWidth="1024"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BackgroundBrush}">
+
+    <Window.Resources>
+        <!-- ViewModel to View Mapping DataTemplates -->
+        <DataTemplate DataType="{x:Type adminVm:AdminDashboardViewModel}">
+            <pages:AdminDashboardPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type mgrVm:ManagerDashboardViewModel}">
+            <pages:ManagerDashboardPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type staffVm:StaffDashboardViewModel}">
+            <pages:StaffDashboardPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type custVm:CustomerDashboardViewModel}">
+            <pages:CustomerDashboardPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type sharedVm:UserProfileViewModel}">
+            <pages:UserProfilePage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type baseVm:PlaceholderPageViewModel}">
+            <pages:PlaceholderPageView />
+        </DataTemplate>
+    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -92,7 +121,6 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0">
@@ -114,7 +142,6 @@
 
                         <Button Grid.Row="1"
                                 Command="{Binding LogoutCommand}"
-                                Content="Đăng xuất"
                                 Height="34"
                                 Background="Transparent"
                                 BorderBrush="{StaticResource BorderBrush}"
@@ -172,51 +199,7 @@
             </Border>
 
             <!-- Dynamic Viewport / Main Workspace -->
-            <Grid Grid.Row="1" Margin="24">
-                <Border Background="{StaticResource SurfaceBrush}"
-                        CornerRadius="8"
-                        BorderBrush="{StaticResource BorderBrush}"
-                        BorderThickness="1"
-                        Padding="24">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="CheckDecagram"
-                                                 Width="64" Height="64"
-                                                 Foreground="{StaticResource AccentBrush}"
-                                                 HorizontalAlignment="Center"
-                                                 Margin="0,0,0,16"/>
-                        <TextBlock Text="KHỞI TẠO CODEBASE HOÀN TẤT!"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"
-                                   Foreground="{StaticResource PrimaryDarkBrush}"
-                                   Margin="0,0,0,8"/>
-                        <TextBlock Text="Hệ thống đã thiết lập cấu trúc MVVM, EF Core Code First, SQL Server, và Seed Data thành công."
-                                   FontSize="14"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,16"/>
-                        <Border Background="#F3F4F6"
-                                CornerRadius="6"
-                                Padding="16"
-                                MaxWidth="600">
-                            <StackPanel>
-                                <TextBlock Text="📌 Thông tin đăng nhập hiện tại:"
-                                           FontWeight="SemiBold"
-                                           FontSize="13"
-                                           Margin="0,0,0,6"/>
-                                <TextBlock Text="{Binding CurrentUserName, StringFormat='• Họ tên: {0}'}" FontSize="12"/>
-                                <TextBlock Text="{Binding CurrentUserRole, StringFormat='• Vai trò: {0}'}" FontSize="12"/>
-                                <TextBlock Text="{Binding CurrentBranchInfo, StringFormat='• Chi nhánh: {0}'}" FontSize="12"/>
-                                <TextBlock Text="Các tính năng chi tiết theo từng ngày sẽ được tiếp tục phát triển trên nền tảng codebase này."
-                                           FontStyle="Italic"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
-                                           Margin="0,8,0,0"
-                                           FontSize="12"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-            </Grid>
+            <ContentControl Grid.Row="1" Content="{Binding CurrentPageViewModel}" />
         </Grid>
     </Grid>
 </Window>
