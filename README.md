@@ -8,7 +8,7 @@
 - **Cơ sở dữ liệu**: Microsoft SQL Server
 - **Bảo mật**: `BCrypt.Net-Next` (Băm mật khẩu)
 - **Kiến trúc & DI**: `Microsoft.Extensions.Hosting` (Generic Host, Dependency Injection, `IDbContextFactory<AppDbContext>`)
-- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (26 unit tests 100% passed)
+- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (66 unit tests 100% passed)
 
 ---
 
@@ -45,6 +45,41 @@
 - [x] **Đạt tiêu chí nghiệm thu Ngày 2 (DoD Ngày 2)**:
   - 26/26 unit tests tự động vượt qua (100% Passed) kiểm tra cả xác thực, phân quyền 4 menu độc lập, đổi mật khẩu và đăng ký tài khoản.
 
+### ✅ Ngày 3: CRUD Cơ sở, Sân, Tài khoản, Cấu hình giá & Hạng hội viên, Validate BR-10
+- [x] **Quản lý Cơ sở (Branch Management - Admin)**:
+  - CRUD đầy đủ cho chi nhánh: Thêm mới, chỉnh sửa thông tin liên hệ (Tên, Địa chỉ, SĐT), bật/tắt kích hoạt (Soft delete).
+  - Kiểm tra chống trùng tên chi nhánh trong toàn hệ thống.
+  - Giao diện `AdminBranchesPage` với bảng hiển thị số sân trực thuộc, ngày thành lập và form trượt (drawer) thêm/sửa trực quan.
+- [x] **Quản lý Sân (Court Management - Admin & Manager Scoping)**:
+  - **Admin**: Quản lý toàn bộ danh sách sân của tất cả các chi nhánh, lọc sân theo cơ sở qua ComboBox, thêm sân mới cho bất kỳ cơ sở nào.
+  - **Manager**: Giao diện `ManagerCourtsPage` bị khoá cứng theo cơ sở trực thuộc (`_currentUser.BranchId`), chỉ thấy và thao tác với sân của cơ sở mình.
+  - **Ràng buộc kỹ thuật bắt buộc (Section 2 & 4)**: Giới hạn cơ sở được thực thi tại tầng **Service** (`BranchCourtService`), ném `ForbiddenException` ngay lập tức nếu Manager cố truy cập hoặc chỉnh sửa sân của cơ sở khác.
+  - **Ràng buộc `Unique(BranchId, Name)`**: Chặn trùng tên sân trong cùng một chi nhánh, nhưng cho phép trùng tên sân ở các chi nhánh khác nhau (VD: Sân 1 tại Cầu Giấy và Sân 1 tại Đống Đa).
+- [x] **Quản lý Tài khoản & Phân cấp nhân sự (User Management)**:
+  - **Admin** (`AdminUsersPage`): Toàn quyền xem, lọc tài khoản theo Vai trò và Chi nhánh, tạo tài khoản mới (Admin, Manager, Staff), cập nhật thông tin và cấp lại mật khẩu.
+  - **Manager** (`ManagerStaffPage`): Chỉ quản lý danh sách **Nhân viên (Staff)** trực thuộc chi nhánh của mình. Bị chặn ở Service nếu cố tạo Admin, Manager hoặc thao tác với nhân sự cơ sở khác.
+  - **Quy tắc phân quyền tài khoản (Section 2 & 4)**:
+    - Tài khoản Quản lý (Manager) và Nhân viên (Staff) **bắt buộc phải gắn với một chi nhánh cụ thể**.
+    - Tài khoản Quản trị viên (Admin) **không được gắn với cơ sở cụ thể (`BranchId = null`)**.
+    - Tên đăng nhập là duy nhất toàn hệ thống, mật khẩu được mã hóa an toàn bằng BCrypt.
+    - Quản trị viên không thể tự khóa tài khoản của chính mình nhằm đảm bảo an toàn vận hành hệ thống.
+- [x] **Cấu hình Bảng giá & Ma trận khung giờ (PriceRule Management - Admin)**:
+  - Giao diện `AdminPricingPage` cho phép thiết lập đơn giá theo từng khung giờ và loại ngày (Ngày thường: Thứ 2 - Thứ 6 / Cuối tuần: Thứ 7 - Chủ Nhật).
+  - Form trượt thêm/sửa khung giá với bộ chọn giờ chuẩn hóa theo bội số 30 phút (`06:00` đến `24:00`).
+  - Nút bật/tắt áp dụng và xoá khung giờ linh hoạt.
+- [x] **Thuật toán Kiểm định Chuẩn BR-10 (BR-10 Coverage & Anti-Overlap Validation)**:
+  - **Quy tắc BR-10**: Các khung giờ của cùng loại ngày không được chồng nhau và phải phủ kín liên tục `06:00 – 24:00` (360 đến 1440 phút).
+  - **Chống trùng lấn (Anti-overlap)**: Kiểm tra ngay khi thêm hoặc cập nhật khung giá đang áp dụng (`r.StartMinute < request.EndMinute && request.StartMinute < r.EndMinute`), ném lỗi nghiệp vụ nêu rõ khung giờ bị xung đột.
+  - **Kiểm định độ phủ kín (`ValidateCoverageAsync`)**: Tự động phát hiện thiếu giờ mở cửa (bắt đầu sau 06:00), thiếu giờ đóng cửa (kết thúc trước 24:00) hoặc khoảng trống ở giữa các khung giờ.
+  - **Thẻ trạng thái BR-10 trực quan thời gian thực**: Hiển thị badge xanh "Đạt chuẩn BR-10" hoặc cảnh báo đỏ chi tiết các khoảng giờ còn thiếu cho cả Ngày thường và Cuối tuần.
+- [x] **Quản lý Chính sách Hạng hội viên & Tích điểm (Membership Tier Policy - Admin)**:
+  - Giao diện `AdminTiersPage` cấu hình các hạng thẻ (Đồng, Bạc, Vàng,...), ngưỡng điểm tích lũy tối thiểu để tự động nâng hạng (BR-16) và mức chiết khấu giảm giá trực tiếp (BR-09).
+  - Thống kê số lượng hội viên hiện tại đang thuộc từng hạng thẻ.
+  - Chặn xóa hạng thẻ nếu hiện tại đang có khách hàng liên kết để bảo toàn dữ liệu khách hàng.
+- [x] **Đạt tiêu chí nghiệm thu Ngày 3 (DoD Ngày 3)**:
+  - Admin thêm sân/đổi giá được; Manager chỉ thấy cơ sở mình.
+  - Toàn bộ **66/66 unit tests tự động vượt qua (100% Passed)**, bao gồm 40 bài test mới cho CRUD Chi nhánh, Sân, Tài khoản, Phân quyền chi nhánh và Validate BR-10.
+
 ---
 
 ## 🏗 Cấu trúc dự án
@@ -55,7 +90,7 @@ BadmintonCourtManagement/
 │   ├── verify_day1_dod.sql           # Script SQL kiểm tra đạt tiêu chí Ngày 1 bằng SSMS
 │   └── Verify-Database.ps1           # Script PowerShell kiểm thử tự động
 ├── BadmintonManager/
-│   ├── App.xaml / App.xaml.cs         # Host, DI, Startup, Migration & Seeder
+│   ├── App.xaml / App.xaml.cs         # Host, DI, Startup, Migration, Seeder & DI Services Registration
 │   ├── appsettings.example.json       # File mẫu cấu hình chuỗi kết nối DB
 │   ├── Models/
 │   │   ├── Entities/                  # 11 Entity: Branch, Court, AppUser, Customer, MembershipTier,
@@ -68,18 +103,19 @@ BadmintonCourtManagement/
 │   │   ├── DbSeeder.cs                # Seed dữ liệu mẫu (3 cơ sở, 18 sân, tài khoản, giá, settings, ~55 bookings)
 │   │   └── DbHealthChecker.cs         # Kiểm tra đạt chuẩn Definition of Done (DoD)
 │   ├── Services/
-│   │   ├── Interfaces/                # IAuthService, IBookingService, IPricingService, ...
-│   │   └── (AuthService, BookingService, PricingService, PaymentService, MembershipService, ...)
+│   │   ├── Interfaces/                # IAuthService, IBranchCourtService, IUserService, IPricingService, IMembershipService...
+│   │   └── (AuthService, BranchCourtService, UserService, PricingService, MembershipService, ...)
 │   ├── Common/
 │   │   ├── Result.cs                  # Standard Result / Result<T> pattern
 │   │   ├── CurrentUserContext.cs      # Thông tin phiên đăng nhập (Singleton)
 │   │   ├── Exceptions/                # BusinessException, ForbiddenException
 │   │   └── Constants.cs
-│   ├── DTOs/                          # Data Transfer Objects cho Request / Response
+│   ├── DTOs/                          # AuthDtos, BranchCourtDtos, UserDtos, PricingDtos, CustomerDtos, BookingDtos
 │   ├── ViewModels/
 │   │   ├── Base/                      # ViewModelBase (ObservableObject, IsBusy, RunAsync), PlaceholderPageViewModel
-│   │   ├── Admin/                     # AdminDashboardViewModel
-│   │   ├── Manager/                   # ManagerDashboardViewModel
+│   │   ├── Admin/                     # AdminDashboardViewModel, AdminBranchesViewModel, AdminCourtsViewModel,
+│   │   │                              # AdminUsersViewModel, AdminPricingViewModel, AdminTiersViewModel
+│   │   ├── Manager/                   # ManagerDashboardViewModel, ManagerCourtsViewModel, ManagerStaffViewModel
 │   │   ├── Staff/                     # StaffDashboardViewModel
 │   │   ├── Customer/                  # CustomerDashboardViewModel
 │   │   ├── Shared/                    # UserProfileViewModel
@@ -90,13 +126,13 @@ BadmintonCourtManagement/
 │   │   ├── LoginWindow.xaml           # Cửa sổ đăng nhập
 │   │   ├── RegisterWindow.xaml        # Cửa sổ đăng ký khách hàng
 │   │   ├── ShellWindow.xaml           # Khung giao diện chính với Navigation Bar và Viewport
-│   │   └── Pages/                     # AdminDashboardPage, ManagerDashboardPage, StaffDashboardPage,
-│   │                                  # CustomerDashboardPage, UserProfilePage, PlaceholderPageView
+│   │   └── Pages/                     # AdminBranchesPage, AdminCourtsPage, AdminUsersPage, AdminPricingPage, AdminTiersPage,
+│   │                                  # ManagerCourtsPage, ManagerStaffPage, UserProfilePage, Dashboards...
 │   ├── Infrastructure/                # NavigationService, DialogService, InvoicePrinter
 │   ├── Converters/                    # BoolToVisibility, MoneyConverter, StatusToBrushConverter
 │   └── Resources/                     # Colors.xaml, Styles.xaml
 └── tests/
-    └── BadmintonManager.Tests/        # 26 bài kiểm thử tự động xUnit (DoD Ngày 1 & Ngày 2)
+    └── BadmintonManager.Tests/        # 66 bài kiểm thử tự động xUnit (DoD Ngày 1, Ngày 2, Ngày 3 100% Passed)
 ```
 
 ---
@@ -105,13 +141,13 @@ BadmintonCourtManagement/
 
 | Tên đăng nhập | Mật khẩu | Vai trò | Tên hiển thị | Chi nhánh trực thuộc | Ghi chú quyền hạn |
 |---|---|---|---|---|---|
-| `admin` | `123456` | **Admin** | Hệ Thống Admin | Toàn hệ thống | Quản trị 10 mục: Bảng điều khiển, Cơ sở, Sân, Người dùng, Giá, Hạng thẻ, Khách hàng, Lịch toàn hệ thống, Báo cáo doanh thu, Tài khoản |
-| `manager1` | `123456` | **Manager** | Nguyễn Văn Quản Lý | Cơ sở Cầu Giấy | Quản lý cơ sở 1: Bảng điều khiển CS, Lịch sân CS, Duyệt booking, Sân CS, Nhân viên CS, Khách hàng, Báo cáo CS, Tài khoản |
-| `manager2` | `123456` | **Manager** | Trần Thị Quản Lý | Cơ sở Đống Đa | Quản lý cơ sở 2 |
-| `manager3` | `123456` | **Manager** | Lê Văn Quản Lý | Cơ sở Thanh Xuân | Quản lý cơ sở 3 |
-| `staff1_1` | `123456` | **Staff** | Lê Thu Staff | Cơ sở Cầu Giấy | Nhân viên ca trực: Bảng điều khiển ca trực, Lịch sân ma trận, Đặt sân / Check-in tại quầy, Danh sách booking, Khách hàng, Tài khoản |
+| `admin` | `123456` | **Admin** | Hệ Thống Admin | Toàn hệ thống | Quản trị toàn quyền: Cơ sở, Sân mọi chi nhánh, Người dùng toàn hệ thống, Bảng giá & BR-10, Hạng thẻ, Báo cáo |
+| `manager1` | `123456` | **Manager** | Nguyễn Văn Quản Lý | Cơ sở Cầu Giấy | Quản lý cơ sở 1: Chỉ thấy và quản lý sân CS Cầu Giấy, chỉ quản lý Staff CS Cầu Giấy |
+| `manager2` | `123456` | **Manager** | Trần Thị Quản Lý | Cơ sở Đống Đa | Quản lý cơ sở 2: Chỉ thấy và quản lý sân CS Đống Đa, chỉ quản lý Staff CS Đống Đa |
+| `manager3` | `123456` | **Manager** | Lê Văn Quản Lý | Cơ sở Thanh Xuân | Quản lý cơ sở 3: Chỉ thấy và quản lý sân CS Thanh Xuân, chỉ quản lý Staff CS Thanh Xuân |
+| `staff1_1` | `123456` | **Staff** | Lê Thu Staff | Cơ sở Cầu Giấy | Nhân viên ca trực: Bảng điều khiển ca trực, Lịch sân ma trận, Đặt sân / Check-in tại quầy, Danh sách booking |
 | `staff1_2` | `123456` | **Staff** | Hoàng Nam Staff | Cơ sở Cầu Giấy | Nhân viên ca trực cơ sở 1 |
-| `customer1` | `123456` | **Customer** | Nguyễn Văn An | Khách hàng | Khách hàng hạng Vàng (1.600 điểm, chiết khấu 10%): Cổng thông tin, Tìm & Đặt sân trực tuyến, Lịch sử đặt, Điểm thưởng, Hồ sơ cá nhân |
+| `customer1` | `123456` | **Customer** | Nguyễn Văn An | Khách hàng | Khách hàng hạng Vàng (1.600 điểm, chiết khấu 10%): Cổng thông tin, Tìm & Đặt sân trực tuyến |
 | `customer2` | `123456` | **Customer** | Trần Thị Bình | Khách hàng | Khách hàng hạng Bạc (750 điểm, chiết khấu 5%) |
 | `customer3` | `123456` | **Customer** | Lê Hoàng Cường | Khách hàng | Khách hàng hạng Đồng (120 điểm, chiết khấu 0%) |
 
@@ -129,7 +165,7 @@ Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư m
 }
 ```
 
-### 2. Chạy toàn bộ 26 bài kiểm thử tự động (Unit Tests)
+### 2. Chạy toàn bộ 66 bài kiểm thử tự động (Unit Tests)
 ```powershell
 dotnet test
 ```
@@ -140,7 +176,14 @@ Mở solution `BadmintonCourtManagement.sln` trong Visual Studio 2022 và nhấn
 dotnet run --project BadmintonManager/BadmintonManager.csproj
 ```
 Khi ứng dụng mở:
-- Thử đăng nhập lần lượt các tài khoản `admin`, `manager1`, `staff1_1`, `customer1` (với mật khẩu `123456`) để xem 4 bộ menu và Dashboard giao diện khác nhau.
-- Thử nhập sai mật khẩu để kiểm tra thông báo bảo mật: `"Sai tên đăng nhập hoặc mật khẩu."`.
-- Thử tính năng "Đăng ký thành viên mới" trên giao diện Login.
-- Thử tính năng "Đổi mật khẩu" tại trang Tài khoản cá nhân.
+- **Kiểm thử DoD Ngày 3 cho Admin**:
+  - Đăng nhập `admin` / `123456`.
+  - Mở menu **"Quản lý cơ sở"**: Thêm/sửa cơ sở chi nhánh mới.
+  - Mở menu **"Quản lý sân"**: Xem sân của mọi chi nhánh qua bộ lọc ComboBox; thêm sân mới cho bất kỳ cơ sở nào.
+  - Mở menu **"Tài khoản người dùng"**: Tạo tài khoản Manager/Staff (bắt buộc chọn cơ sở) hoặc Admin (`BranchId = null`).
+  - Mở menu **"Bảng giá & Khung giờ"**: Xem trạng thái phủ kín BR-10 của Ngày thường và Cuối tuần; thêm/sửa khung giá (hệ thống tự động phát hiện và chặn nếu bị trùng lấn khung giờ).
+  - Mở menu **"Hạng hội viên"**: Cấu hình ngưỡng điểm nâng hạng và % giảm giá trực tiếp cho Đồng, Bạc, Vàng.
+- **Kiểm thử DoD Ngày 3 cho Manager**:
+  - Đăng nhập `manager1` / `123456`.
+  - Mở menu **"Sân cơ sở"**: Chỉ hiển thị 6 sân của Cơ sở Cầu Giấy; form thêm sân bị khoá cứng theo Cơ sở Cầu Giấy.
+  - Mở menu **"Nhân viên cơ sở"**: Chỉ hiển thị và quản lý nhân viên của Cơ sở Cầu Giấy; chỉ có quyền tạo tài khoản Staff thuộc cơ sở này.
