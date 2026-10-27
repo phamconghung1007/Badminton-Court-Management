@@ -66,8 +66,10 @@ public partial class App : Application
                 services.AddTransient<BadmintonManager.ViewModels.Admin.AdminDashboardViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Admin.AdminBranchesViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Admin.AdminCourtsViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Admin.AdminUsersViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Manager.ManagerDashboardViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Manager.ManagerCourtsViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Manager.ManagerStaffViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Staff.StaffDashboardViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Customer.CustomerDashboardViewModel>();
 
@@ -79,8 +81,10 @@ public partial class App : Application
                 services.AddTransient<BadmintonManager.Views.Pages.AdminDashboardPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.AdminBranchesPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.AdminCourtsPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.AdminUsersPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.ManagerDashboardPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.ManagerCourtsPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.ManagerStaffPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.StaffDashboardPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.CustomerDashboardPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.PlaceholderPageView>();

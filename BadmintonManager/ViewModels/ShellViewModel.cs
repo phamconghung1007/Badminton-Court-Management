@@ -159,12 +159,8 @@ public partial class ShellViewModel : ViewModelBase
             "AdminBranches" => _serviceProvider.GetRequiredService<AdminBranchesViewModel>(),
             "AdminCourts" => _serviceProvider.GetRequiredService<AdminCourtsViewModel>(),
             "ManagerCourts" => _serviceProvider.GetRequiredService<ManagerCourtsViewModel>(),
-
-            "AdminUsers" or "ManagerStaff" => new PlaceholderPageViewModel(
-                "Quản lý tài khoản & Phân quyền",
-                "Tạo và quản lý tài khoản nhân sự (Admin, Manager, Staff), khóa/mở khóa tài khoản, phân bổ quản lý cơ sở và reset mật khẩu.",
-                "Ngày 3 - Quản trị Nhân sự & Phân quyền",
-                "AccountMultiple"),
+            "AdminUsers" => _serviceProvider.GetRequiredService<AdminUsersViewModel>(),
+            "ManagerStaff" => _serviceProvider.GetRequiredService<ManagerStaffViewModel>(),
 
             "AdminPricing" => new PlaceholderPageViewModel(
                 "Bảng giá gốc & Khung giờ",

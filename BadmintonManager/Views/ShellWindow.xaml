@@ -41,6 +41,12 @@
         <DataTemplate DataType="{x:Type mgrVm:ManagerCourtsViewModel}">
             <pages:ManagerCourtsPage />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type adminVm:AdminUsersViewModel}">
+            <pages:AdminUsersPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type mgrVm:ManagerStaffViewModel}">
+            <pages:ManagerStaffPage />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type sharedVm:UserProfileViewModel}">
             <pages:UserProfilePage />
         </DataTemplate>
