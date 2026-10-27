@@ -32,6 +32,15 @@
         <DataTemplate DataType="{x:Type custVm:CustomerDashboardViewModel}">
             <pages:CustomerDashboardPage />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type adminVm:AdminBranchesViewModel}">
+            <pages:AdminBranchesPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type adminVm:AdminCourtsViewModel}">
+            <pages:AdminCourtsPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type mgrVm:ManagerCourtsViewModel}">
+            <pages:ManagerCourtsPage />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type sharedVm:UserProfileViewModel}">
             <pages:UserProfilePage />
         </DataTemplate>

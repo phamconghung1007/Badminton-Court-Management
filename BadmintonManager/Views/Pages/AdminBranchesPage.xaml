@@ -1,0 +1,215 @@
+<UserControl x:Class="BadmintonManager.Views.Pages.AdminBranchesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1000"
+             Loaded="UserControl_Loaded">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header & Action Bar -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Quản lý Cơ sở Chi nhánh (Branches)"
+                           FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="Danh mục chi nhánh toàn hệ thống, cấu hình địa chỉ và liên hệ"
+                           FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Search Box -->
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Tìm tên, địa chỉ, SĐT..."
+                         Width="240" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Return" Command="{Binding LoadBranchesCommand}"/>
+                    </TextBox.InputBindings>
+                </TextBox>
+
+                <Button Command="{Binding LoadBranchesCommand}"
+                        Style="{StaticResource OutlineButtonStyle}"
+                        Margin="0,0,12,0" Height="38">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Làm mới" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding OpenAddFormCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Height="38">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="PlusCircle" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Thêm cơ sở" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Main Content Area: DataGrid + Side Form Drawer -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Branches DataGrid -->
+            <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,0,8,0">
+                <DataGrid ItemsSource="{Binding Branches}"
+                          SelectedItem="{Binding SelectedBranch, Mode=TwoWay}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          Background="Transparent"
+                          BorderThickness="0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Mã" Binding="{Binding Id}" Width="60"/>
+                        <DataGridTextColumn Header="Tên cơ sở" Binding="{Binding Name}" Width="1.5*" FontWeight="SemiBold"/>
+                        <DataGridTextColumn Header="Địa chỉ" Binding="{Binding Address}" Width="2*"/>
+                        <DataGridTextColumn Header="Số điện thoại" Binding="{Binding Phone}" Width="120"/>
+                        <DataGridTextColumn Header="Số sân" Binding="{Binding CourtCount, StringFormat='{}{0} sân'}" Width="80"/>
+
+                        <!-- Status Column -->
+                        <DataGridTemplateColumn Header="Trạng thái" Width="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="12" Padding="8,3" HorizontalAlignment="Left">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#DCFCE7"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                        <Setter Property="Background" Value="#FEE2E2"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock FontSize="11" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Hoạt động"/>
+                                                    <Setter Property="Foreground" Value="#15803D"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Text" Value="Vô hiệu hóa"/>
+                                                            <Setter Property="Foreground" Value="#B91C1C"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Action Buttons -->
+                        <DataGridTemplateColumn Header="Thao tác" Width="140">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                ToolTip="Chỉnh sửa cơ sở"
+                                                Command="{Binding DataContext.OpenEditFormCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Width="32" Height="32">
+                                            <materialDesign:PackIcon Kind="PencilOutline" Foreground="{StaticResource PrimaryBrush}"/>
+                                        </Button>
+
+                                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                                ToolTip="Bật/Tắt trạng thái hoạt động"
+                                                Command="{Binding DataContext.ToggleStatusCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Width="32" Height="32">
+                                            <materialDesign:PackIcon Kind="Power" Foreground="{StaticResource CancelledBrush}"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- Side Form Panel for Add/Edit -->
+            <Border Grid.Column="1"
+                    Style="{StaticResource CardBorderStyle}"
+                    Visibility="{Binding IsFormOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Width="360"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Stretch">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Form Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <TextBlock Text="{Binding FormTitle}"
+                                   FontWeight="Bold" FontSize="16" Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center"/>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                Command="{Binding CloseFormCommand}"
+                                HorizontalAlignment="Right" Width="28" Height="28">
+                            <materialDesign:PackIcon Kind="Close"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Input Fields -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBox Text="{Binding BranchName, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Tên cơ sở (*)"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Margin="0,0,0,16"/>
+
+                            <TextBox Text="{Binding BranchAddress, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Địa chỉ chi nhánh"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     Height="60"
+                                     Margin="0,0,0,16"/>
+
+                            <TextBox Text="{Binding BranchPhone, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Số điện thoại liên hệ"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Margin="0,0,0,20"/>
+
+                            <CheckBox IsChecked="{Binding BranchIsActive}"
+                                      Content="Đang hoạt động"
+                                      Margin="0,0,0,20"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Actions -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Content="Hủy"
+                                Command="{Binding CloseFormCommand}"
+                                Style="{StaticResource OutlineButtonStyle}"
+                                Margin="0,0,8,0" Width="80"/>
+                        <Button Content="Lưu"
+                                Command="{Binding SaveBranchCommand}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Width="90"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

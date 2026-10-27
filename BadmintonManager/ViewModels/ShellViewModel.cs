@@ -156,18 +156,9 @@ public partial class ShellViewModel : ViewModelBase
             "StaffDashboard" => _serviceProvider.GetRequiredService<StaffDashboardViewModel>(),
             "CustomerDashboard" => _serviceProvider.GetRequiredService<CustomerDashboardViewModel>(),
             "UserProfile" or "CustomerProfile" => _serviceProvider.GetRequiredService<UserProfileViewModel>(),
-
-            "AdminBranches" => new PlaceholderPageViewModel(
-                "Quản lý cơ sở (Branches)",
-                "Quản lý danh sách chi nhánh cơ sở toàn hệ thống: thêm mới, sửa đổi thông tin, thiết lập địa chỉ và cấu hình số lượng sân.",
-                "Ngày 3 - Quản trị Danh mục Cơ sở & Sân",
-                "Domain"),
-
-            "AdminCourts" or "ManagerCourts" => new PlaceholderPageViewModel(
-                "Quản lý sân cầu lông (Courts)",
-                "Quản lý danh sách sân, trạng thái hoạt động (Hoạt động / Bảo trì / Tạm ngưng) và quy định gắn với từng cơ sở.",
-                "Ngày 3 - Quản trị Danh mục Cơ sở & Sân",
-                "Grid"),
+            "AdminBranches" => _serviceProvider.GetRequiredService<AdminBranchesViewModel>(),
+            "AdminCourts" => _serviceProvider.GetRequiredService<AdminCourtsViewModel>(),
+            "ManagerCourts" => _serviceProvider.GetRequiredService<ManagerCourtsViewModel>(),
 
             "AdminUsers" or "ManagerStaff" => new PlaceholderPageViewModel(
                 "Quản lý tài khoản & Phân quyền",
