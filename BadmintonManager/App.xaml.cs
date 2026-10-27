@@ -67,6 +67,8 @@ public partial class App : Application
                 services.AddTransient<BadmintonManager.ViewModels.Admin.AdminBranchesViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Admin.AdminCourtsViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Admin.AdminUsersViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Admin.AdminPricingViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Admin.AdminTiersViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Manager.ManagerDashboardViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Manager.ManagerCourtsViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Manager.ManagerStaffViewModel>();
@@ -82,6 +84,8 @@ public partial class App : Application
                 services.AddTransient<BadmintonManager.Views.Pages.AdminBranchesPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.AdminCourtsPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.AdminUsersPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.AdminPricingPage>();
+                services.AddTransient<BadmintonManager.Views.Pages.AdminTiersPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.ManagerDashboardPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.ManagerCourtsPage>();
                 services.AddTransient<BadmintonManager.Views.Pages.ManagerStaffPage>();

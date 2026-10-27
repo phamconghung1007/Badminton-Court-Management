@@ -44,6 +44,12 @@
         <DataTemplate DataType="{x:Type adminVm:AdminUsersViewModel}">
             <pages:AdminUsersPage />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type adminVm:AdminPricingViewModel}">
+            <pages:AdminPricingPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type adminVm:AdminTiersViewModel}">
+            <pages:AdminTiersPage />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type mgrVm:ManagerStaffViewModel}">
             <pages:ManagerStaffPage />
         </DataTemplate>

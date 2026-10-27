@@ -162,13 +162,9 @@ public partial class ShellViewModel : ViewModelBase
             "AdminUsers" => _serviceProvider.GetRequiredService<AdminUsersViewModel>(),
             "ManagerStaff" => _serviceProvider.GetRequiredService<ManagerStaffViewModel>(),
 
-            "AdminPricing" => new PlaceholderPageViewModel(
-                "Bảng giá gốc & Khung giờ",
-                "Thiết lập ma trận khung giờ giá theo Ngày thường (Thứ 2 - Thứ 6) và Cuối tuần (Thứ 7 - CN), giờ cao điểm / thấp điểm theo Section 3.",
-                "Ngày 4 - Cấu hình Bảng giá & Hạng hội viên",
-                "CurrencyUsd"),
-
-            "AdminTiers" or "CustomerPoints" => new PlaceholderPageViewModel(
+            "AdminPricing" => _serviceProvider.GetRequiredService<AdminPricingViewModel>(),
+            "AdminTiers" => _serviceProvider.GetRequiredService<AdminTiersViewModel>(),
+            "CustomerPoints" => new PlaceholderPageViewModel(
                 "Hạng hội viên & Điểm thưởng",
                 "Chính sách phân hạng hội viên (Đồng, Bạc, Vàng), tỷ lệ tích điểm và chiết khấu giảm giá trực tiếp theo quy định Section 3.3.",
                 "Ngày 4 - Cấu hình Bảng giá & Hạng hội viên",
