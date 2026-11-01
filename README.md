@@ -8,7 +8,7 @@
 - **Cơ sở dữ liệu**: Microsoft SQL Server
 - **Bảo mật**: `BCrypt.Net-Next` (Băm mật khẩu)
 - **Kiến trúc & DI**: `Microsoft.Extensions.Hosting` (Generic Host, Dependency Injection, `IDbContextFactory<AppDbContext>`)
-- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (106 unit tests 100% passed)
+- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (126 unit tests 100% passed)
 
 ---
 
@@ -101,6 +101,38 @@
   - Toàn bộ các test: **trùng giờ**, **khoảng trống 30 phút**, **vắt qua 2 khung giá**, **cuối tuần**, **giảm hạng hội viên**, **làm tròn cọc** đều xanh.
   - Toàn bộ **106/106 unit tests tự động vượt qua (100% Passed)** với 40 bài test mới bổ sung cho Day 4.
 
+### ✅ Ngày 5: Màn hình Lịch sân (Schedule Grid) + Form đặt sân + Danh sách booking
+- [x] **Mô hình DTO ma trận & Thuật toán sinh lưới lịch 36 slots $\times$ N sân (`ScheduleMatrixHelper`)**:
+  - Chia ngày thành 36 time slots cố định 30 phút (`06:00` đến `24:00`, Slot 0..35 theo phụ lục A1, A2).
+  - Thuật toán `BuildBookingBlock` ánh xạ thời gian thực của booking sang vị trí ma trận: `RowIndex` (slot bắt đầu), `RowSpan` (số block 30 phút), `ColumnIndex` (sân tương ứng).
+  - Ánh xạ bảng màu trạng thái chuẩn UI/UX: Chờ duyệt (`#F59E0B` - Vàng/Cam), Đã duyệt (`#2563EB` - Xanh dương), Đang chơi (`#10B981` - Xanh lá), Hoàn thành (`#6B7280` - Xám), Vắng mặt (`#EF4444` - Đỏ).
+  - Thuật toán `BuildEmptySlots` quét toàn bộ ô trống trên từng sân để người dùng click đặt sân trực tiếp.
+  - Tự động tính toán toạ độ pixel (`X`, `Y`, `Width`, `Height`) để hiển thị trực quan và mượt mà trên Canvas mà không làm giảm hiệu năng WPF.
+- [x] **Màn hình Lịch sân chi nhánh (`SchedulePage` & `ScheduleViewModel`)**:
+  - Bộ điều hướng ngày linh hoạt: Nút lùi 1 ngày (◀), Hôm nay, Nút tiến 1 ngày (▶), bộ chọn `DatePicker`.
+  - Bộ chọn chi nhánh động cho Admin (`CanSelectBranch = true`), tự động khóa cứng chi nhánh với Manager và Staff.
+  - Vùng lưới lịch cuộn mượt mà hai chiều (`ScrollViewer`): Cột giờ 36 khung thời gian bên trái, hàng header hiển thị các sân thể thao, lớp nền ô trống có hiệu ứng hover và dấu `+`, lớp khối booking nổi bật với bo góc, thông tin mã đơn, tên khách, SĐT và số tiền.
+  - Thanh chú thích màu trạng thái (Legend bar) giúp nhân viên nhận diện tức thì tình trạng sân bãi.
+- [x] **Form Đặt Sân Tích Hợp (Create Booking Drawer) & Live Pricing Preview**:
+  - Tự động điền sân và giờ chơi khi click vào bất kỳ ô trống nào trên lịch sân.
+  - Hỗ trợ linh hoạt 2 luồng khách hàng: Khách vãng lai (nhập tên, SĐT) và Hội viên (tìm kiếm theo tên/SĐT, tự động lấy thông tin hạng thẻ và chiết khấu).
+  - Khung xem trước giá thời gian thực (**Live Pricing Preview**): Tự động tính toán đơn giá gốc theo khung giờ, trừ chiết khấu hội viên (Đồng 0%, Bạc 5%, Vàng 10%), tổng tiền sân và số tiền đặt cọc tối thiểu 30% làm tròn theo quy chuẩn BR-11.
+  - Bắt lỗi nghiệp vụ tiếng Việt chi tiết khi vi phạm: trùng giờ (BR-03), vi phạm khoảng trống 30 phút (BR-04), thời lượng không hợp lệ (BR-02), hoặc đặt trong quá khứ (BR-05).
+  - Tự động nạp lại lịch và hiển thị khối booking ngay tại ô vừa đặt khi đặt sân thành công.
+- [x] **Drawer Chi Tiết Booking & Thao Tác Nghiệp Vụ (Booking Details Drawer)**:
+  - Hiển thị đầy đủ thông tin: Mã đơn, Sân & Cơ sở, Khung giờ, Khách hàng, Tổng tiền, Tiền cọc, Đã thanh toán.
+  - Các nút hành động nghiệp vụ nhanh cho lễ tân:
+    - **Duyệt đơn** (`Confirm`): Chuyển đơn từ `Pending` sang `Confirmed`.
+    - **Check-in vào sân** (`Check-in`): Chuyển đơn từ `Confirmed` sang `CheckedIn` khi khách tới nhận sân.
+    - **Hủy đặt sân** (`Cancel`): Xác nhận hủy đơn, tự động tính toán hoàn cọc nếu hủy trước 24 giờ.
+- [x] **Màn hình Danh Sách Booking (`BookingListPage` & `BookingListViewModel`)**:
+  - KPI Cards thống kê: Tổng số đơn, Chờ duyệt, Đã duyệt, Đang chơi, Doanh số hiện tại.
+  - Bộ lọc đa năng: Lọc theo Ngày, Lọc theo Trạng thái (Tất cả, Pending, Confirmed, CheckedIn, Completed, Cancelled, NoShow), Lọc theo Sân đấu, và Ô tìm kiếm theo từ khóa.
+  - Thao tác trực tiếp trên từng dòng danh sách: Duyệt đơn, Check-in, Hủy đơn với thông báo xác nhận tiếng Việt.
+- [x] **Đạt tiêu chí nghiệm thu Ngày 5 (DoD Ngày 5)**:
+  - *"Staff đặt được trên lịch, thấy khối booking đúng chỗ; đặt trùng bị chặn với thông báo tiếng Việt"*.
+  - Toàn bộ **126/126 unit tests tự động vượt qua (100% Passed)** với 20 bài test mới bao phủ `ScheduleMatrixHelper`, `ScheduleViewModel` (DoD workflow, overlap blocking, live pricing preview), `BookingListViewModel` và điều hướng Shell.
+
 ---
 
 ## 🏗 Cấu trúc dự án
@@ -153,7 +185,7 @@ BadmintonCourtManagement/
 │   ├── Converters/                    # BoolToVisibility, MoneyConverter, StatusToBrushConverter
 │   └── Resources/                     # Colors.xaml, Styles.xaml
 └── tests/
-    └── BadmintonManager.Tests/        # 106 bài kiểm thử tự động xUnit (DoD Ngày 1, 2, 3, 4 100% Passed)
+    └── BadmintonManager.Tests/        # 126 bài kiểm thử tự động xUnit (DoD Ngày 1, 2, 3, 4, 5 100% Passed)
 ```
 
 ---
