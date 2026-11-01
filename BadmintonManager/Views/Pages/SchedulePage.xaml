@@ -637,8 +637,40 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Action Buttons: Duyệt, Check-in, Hủy -->
+                        <!-- Action Buttons: Thu tiền, In hóa đơn, Sửa, Duyệt, Check-in, Hủy -->
                         <StackPanel>
+                            <!-- Nút Thu tiền / Thanh toán -->
+                            <Button Command="{Binding OpenPaymentDialogCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Background="#2563EB" BorderBrush="#1D4ED8"
+                                    Margin="0,0,0,8" Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CashMultiple" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Thu Tiền / Thanh Toán" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Nút In / Xem trước hóa đơn -->
+                            <Button Command="{Binding PreviewInvoiceCommand}"
+                                    Style="{StaticResource OutlineButtonStyle}"
+                                    BorderBrush="#2563EB" Foreground="#2563EB"
+                                    Margin="0,0,0,8" Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Printer" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Xem &amp; In Hóa Đơn" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Nút Sửa đơn đặt sân (nếu Pending hoặc Confirmed) -->
+                            <Button Command="{Binding OpenEditBookingDialogCommand}"
+                                    Style="{StaticResource OutlineButtonStyle}"
+                                    Margin="0,0,0,8" Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CalendarEdit" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Điều Chỉnh Lịch / Sân" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
                             <!-- Nút Duyệt đơn (nếu Pending) -->
                             <Button Command="{Binding ConfirmBookingCommand}"
                                     Style="{StaticResource PrimaryButtonStyle}"

@@ -26,6 +26,9 @@ public partial class ScheduleViewModel : ViewModelBase
     private readonly IPricingService _pricingService;
     private readonly ICustomerService _customerService;
     private readonly IDialogService _dialogService;
+    private readonly IPaymentService? _paymentService;
+    private readonly IInvoiceService? _invoiceService;
+    private readonly IInvoicePrinter? _invoicePrinter;
 
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private BranchDto? _selectedBranch;
@@ -89,7 +92,10 @@ public partial class ScheduleViewModel : ViewModelBase
         IBranchCourtService branchCourtService,
         IPricingService pricingService,
         ICustomerService customerService,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IPaymentService? paymentService = null,
+        IInvoiceService? invoiceService = null,
+        IInvoicePrinter? invoicePrinter = null)
     {
         _factory = factory;
         _currentUser = currentUser;
@@ -98,6 +104,9 @@ public partial class ScheduleViewModel : ViewModelBase
         _pricingService = pricingService;
         _customerService = customerService;
         _dialogService = dialogService;
+        _paymentService = paymentService;
+        _invoiceService = invoiceService;
+        _invoicePrinter = invoicePrinter;
 
         CanSelectBranch = _currentUser.IsAdmin;
 
@@ -552,7 +561,7 @@ public partial class ScheduleViewModel : ViewModelBase
     {
         if (DetailedBooking == null) return;
         bool confirm = _dialogService.ShowConfirmation(
-            $"Bạn có chắc chắn muốn hủy đơn đặt sân #{DetailedBooking.Code} không?",
+            $"Bạn có chắc chắn muốn hủy đơn đặt sân #{DetailedBooking.Code} không?\nNếu hủy trước 24 giờ, hệ thống sẽ tự động hoàn cọc theo quy định.",
             "Xác nhận hủy đơn");
         if (!confirm) return;
 
@@ -570,6 +579,61 @@ public partial class ScheduleViewModel : ViewModelBase
         catch (Exception ex)
         {
             _dialogService.ShowError(ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenPaymentDialogAsync()
+    {
+        if (DetailedBooking == null || _paymentService == null || _invoiceService == null || _invoicePrinter == null) return;
+
+        var dlg = new BadmintonManager.Views.Dialogs.PaymentDialog(
+            DetailedBooking.Id,
+            _paymentService,
+            _invoiceService,
+            _invoicePrinter,
+            _dialogService);
+
+        if (dlg.ShowDialog() == true)
+        {
+            DetailedBooking = await _bookingService.GetBookingByIdAsync(DetailedBooking.Id);
+            await LoadScheduleDataInternalAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenEditBookingDialogAsync()
+    {
+        if (DetailedBooking == null) return;
+
+        var dlg = new BadmintonManager.Views.Dialogs.EditBookingDialog(
+            DetailedBooking.Id,
+            _bookingService,
+            _branchCourtService,
+            _pricingService,
+            _dialogService);
+
+        if (dlg.ShowDialog() == true)
+        {
+            DetailedBooking = await _bookingService.GetBookingByIdAsync(DetailedBooking.Id);
+            await LoadScheduleDataInternalAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task PreviewInvoiceAsync()
+    {
+        if (DetailedBooking == null || _invoiceService == null || _invoicePrinter == null) return;
+
+        try
+        {
+            var invoice = await _invoiceService.GetInvoiceDataAsync(DetailedBooking.Id);
+            var dlg = new BadmintonManager.Views.Dialogs.InvoicePreviewDialog(invoice, _invoicePrinter);
+            dlg.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowError($"Không thể tạo hóa đơn: {ex.Message}");
         }
     }
 

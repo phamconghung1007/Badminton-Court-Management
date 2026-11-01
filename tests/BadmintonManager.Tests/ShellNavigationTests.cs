@@ -51,6 +51,10 @@ public class ShellNavigationTests
         services.AddTransient<IBookingService, BookingService>();
         services.AddTransient<IBranchCourtService, BranchCourtService>();
         services.AddTransient<ICustomerService, CustomerService>();
+        services.AddTransient<IMembershipService, MembershipService>();
+        services.AddTransient<IPaymentService, PaymentService>();
+        services.AddTransient<IInvoiceService, InvoiceService>();
+        services.AddTransient<IInvoicePrinter, InvoicePrinter>();
 
         // ViewModels
         services.AddTransient<AdminDashboardViewModel>();

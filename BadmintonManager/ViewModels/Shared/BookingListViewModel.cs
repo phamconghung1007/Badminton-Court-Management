@@ -23,6 +23,10 @@ public partial class BookingListViewModel : ViewModelBase
     private readonly IBookingService _bookingService;
     private readonly IBranchCourtService _branchCourtService;
     private readonly IDialogService _dialogService;
+    private readonly IPaymentService? _paymentService;
+    private readonly IInvoiceService? _invoiceService;
+    private readonly IInvoicePrinter? _invoicePrinter;
+    private readonly IPricingService? _pricingService;
 
     [ObservableProperty] private DateTime? _filterDate = DateTime.Today;
     [ObservableProperty] private int _selectedStatusFilterIndex = 0; // 0: Tất cả
@@ -44,13 +48,21 @@ public partial class BookingListViewModel : ViewModelBase
         CurrentUserContext currentUser,
         IBookingService bookingService,
         IBranchCourtService branchCourtService,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IPaymentService? paymentService = null,
+        IInvoiceService? invoiceService = null,
+        IInvoicePrinter? invoicePrinter = null,
+        IPricingService? pricingService = null)
     {
         _factory = factory;
         _currentUser = currentUser;
         _bookingService = bookingService;
         _branchCourtService = branchCourtService;
         _dialogService = dialogService;
+        _paymentService = paymentService;
+        _invoiceService = invoiceService;
+        _invoicePrinter = invoicePrinter;
+        _pricingService = pricingService;
     }
 
     [RelayCommand]
@@ -206,6 +218,59 @@ public partial class BookingListViewModel : ViewModelBase
         catch (Exception ex)
         {
             _dialogService.ShowError(ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenPaymentAsync(BookingItemDto? booking)
+    {
+        if (booking == null || _paymentService == null || _invoiceService == null || _invoicePrinter == null) return;
+
+        var dlg = new BadmintonManager.Views.Dialogs.PaymentDialog(
+            booking.Id,
+            _paymentService,
+            _invoiceService,
+            _invoicePrinter,
+            _dialogService);
+
+        if (dlg.ShowDialog() == true)
+        {
+            await LoadBookingsInternalAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenEditBookingAsync(BookingItemDto? booking)
+    {
+        if (booking == null || _pricingService == null) return;
+
+        var dlg = new BadmintonManager.Views.Dialogs.EditBookingDialog(
+            booking.Id,
+            _bookingService,
+            _branchCourtService,
+            _pricingService,
+            _dialogService);
+
+        if (dlg.ShowDialog() == true)
+        {
+            await LoadBookingsInternalAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task PreviewInvoiceAsync(BookingItemDto? booking)
+    {
+        if (booking == null || _invoiceService == null || _invoicePrinter == null) return;
+
+        try
+        {
+            var invoice = await _invoiceService.GetInvoiceDataAsync(booking.Id);
+            var dlg = new BadmintonManager.Views.Dialogs.InvoicePreviewDialog(invoice, _invoicePrinter);
+            dlg.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowError($"Không thể tạo hóa đơn: {ex.Message}");
         }
     }
 }

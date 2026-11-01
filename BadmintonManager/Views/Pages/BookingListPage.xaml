@@ -296,13 +296,38 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+                                    <!-- Thu tiền / Thanh toán -->
+                                    <Button Command="{Binding DataContext.OpenPaymentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Padding="8,0" Height="28" Margin="0,0,5,0" FontSize="11" ToolTip="Thu tiền / Thanh toán">
+                                        <materialDesign:PackIcon Kind="CashMultiple" Width="14" Height="14"/>
+                                    </Button>
+
+                                    <!-- Xem / In hóa đơn -->
+                                    <Button Command="{Binding DataContext.PreviewInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource OutlineButtonStyle}"
+                                            Padding="6,0" Height="28" Margin="0,0,5,0" FontSize="11" ToolTip="Xem &amp; In hóa đơn">
+                                        <materialDesign:PackIcon Kind="Printer" Width="14" Height="14" Foreground="{StaticResource PrimaryBrush}"/>
+                                    </Button>
+
+                                    <!-- Chỉnh sửa (Pending or Confirmed) -->
+                                    <Button Command="{Binding DataContext.OpenEditBookingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource OutlineButtonStyle}"
+                                            Padding="6,0" Height="28" Margin="0,0,5,0" FontSize="11" ToolTip="Chỉnh sửa sân / giờ">
+                                        <materialDesign:PackIcon Kind="PencilOutline" Width="14" Height="14"/>
+                                    </Button>
+
                                     <!-- Duyệt (Pending) -->
                                     <Button Command="{Binding DataContext.ConfirmBookingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Visibility="{Binding IsPending, Converter={StaticResource BoolToVisibilityConverter}}"
                                             Style="{StaticResource PrimaryButtonStyle}"
-                                            Padding="10,0" Height="28" Margin="0,0,6,0" FontSize="11">
-                                        <TextBlock Text="Duyệt đơn"/>
+                                            Background="#F59E0B" BorderBrush="#D97706"
+                                            Padding="8,0" Height="28" Margin="0,0,5,0" FontSize="11">
+                                        <TextBlock Text="Duyệt"/>
                                     </Button>
 
                                     <!-- Check-in (Confirmed) -->
@@ -311,7 +336,7 @@
                                             Visibility="{Binding IsConfirmed, Converter={StaticResource BoolToVisibilityConverter}}"
                                             Style="{StaticResource PrimaryButtonStyle}"
                                             Background="#10B981" BorderBrush="#059669"
-                                            Padding="10,0" Height="28" Margin="0,0,6,0" FontSize="11">
+                                            Padding="8,0" Height="28" Margin="0,0,5,0" FontSize="11">
                                         <TextBlock Text="Check-in"/>
                                     </Button>
 
@@ -320,8 +345,8 @@
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource OutlineButtonStyle}"
                                             BorderBrush="#EF4444" Foreground="#EF4444"
-                                            Padding="8,0" Height="28" FontSize="11">
-                                        <TextBlock Text="Hủy"/>
+                                            Padding="6,0" Height="28" FontSize="11" ToolTip="Hủy đơn">
+                                        <materialDesign:PackIcon Kind="Cancel" Width="14" Height="14"/>
                                     </Button>
                                 </StackPanel>
                             </DataTemplate>
