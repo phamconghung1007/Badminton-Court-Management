@@ -44,6 +44,12 @@ public class ShellNavigationTests
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IDialogService, StubDialogService>();
         services.AddTransient<IAuthService, AuthService>();
+        var settingService = new SettingService(factory);
+        var pricingService = new PricingService(factory, settingService, currentUser);
+        services.AddSingleton<ISettingService>(settingService);
+        services.AddSingleton<IPricingService>(pricingService);
+        services.AddTransient<IBookingService, BookingService>();
+        services.AddTransient<IBranchCourtService, BranchCourtService>();
 
         // ViewModels
         services.AddTransient<AdminDashboardViewModel>();
@@ -51,6 +57,7 @@ public class ShellNavigationTests
         services.AddTransient<StaffDashboardViewModel>();
         services.AddTransient<CustomerDashboardViewModel>();
         services.AddTransient<UserProfileViewModel>();
+        services.AddTransient<ScheduleViewModel>();
         services.AddTransient<ShellViewModel>();
 
         return services.BuildServiceProvider();
@@ -158,7 +165,7 @@ public class ShellNavigationTests
     }
 
     [Fact]
-    public void ShellViewModel_NavigateToUpcomingFeature_ResolvesPlaceholderPageWithRoadmapTarget()
+    public void ShellViewModel_NavigateToScheduleGrid_ResolvesScheduleViewModel()
     {
         // Arrange
         var context = new CurrentUserContext();
@@ -171,9 +178,26 @@ public class ShellNavigationTests
         shell.SelectedMenuItem = scheduleItem;
 
         // Assert
+        shell.CurrentPageViewModel.Should().BeOfType<ScheduleViewModel>();
+    }
+
+    [Fact]
+    public void ShellViewModel_NavigateToUpcomingFeature_ResolvesPlaceholderPageWithRoadmapTarget()
+    {
+        // Arrange
+        var context = new CurrentUserContext();
+        context.SetUser(1, "admin", "Admin User", UserRole.Admin, null);
+        var sp = CreateTestServiceProvider(context);
+        var shell = sp.GetRequiredService<ShellViewModel>();
+
+        // Act
+        var reportItem = shell.MenuItems.First(m => m.PageKey == "AdminReports");
+        shell.SelectedMenuItem = reportItem;
+
+        // Assert
         shell.CurrentPageViewModel.Should().BeOfType<PlaceholderPageViewModel>();
         var placeholder = (PlaceholderPageViewModel)shell.CurrentPageViewModel!;
-        placeholder.DayTarget.Should().Contain("Ngày 5");
+        placeholder.DayTarget.Should().Contain("Ngày 7");
     }
 
     [Fact]

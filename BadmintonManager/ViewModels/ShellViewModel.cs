@@ -176,11 +176,7 @@ public partial class ShellViewModel : ViewModelBase
                 "Ngày 4 - Quản lý Khách hàng & Hội viên",
                 "AccountGroup"),
 
-            "ScheduleGrid" => new PlaceholderPageViewModel(
-                "Lịch sân trực quan (Schedule Grid)",
-                "Ma trận lịch đặt sân trực quan theo thời gian thực (06:00 - 24:00), hiển thị tình trạng Trống, Đã đặt, Đang sử dụng, Bảo trì.",
-                "Ngày 5 - Ma trận Lịch sân Trực quan",
-                "CalendarMonth"),
+            "ScheduleGrid" => _serviceProvider.GetRequiredService<ScheduleViewModel>(),
 
             "CreateBooking" or "CustomerBookCourt" => new PlaceholderPageViewModel(
                 "Đặt sân & Check-in",
