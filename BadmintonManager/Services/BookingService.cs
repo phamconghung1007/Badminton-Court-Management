@@ -174,9 +174,25 @@ public class BookingService : IBookingService
         };
     }
 
+    private sealed class NoOpTransaction : IDbContextTransaction
+    {
+        public Guid TransactionId { get; } = Guid.NewGuid();
+        public void Commit() { }
+        public Task CommitAsync(System.Threading.CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Rollback() { }
+        public Task RollbackAsync(System.Threading.CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Dispose() { }
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
     private async Task<IDbContextTransaction> BeginTransactionSafelyAsync(AppDbContext db)
     {
-        if (db.Database.IsRelational() && db.Database.ProviderName != null &&
+        if (!db.Database.IsRelational())
+        {
+            return new NoOpTransaction();
+        }
+
+        if (db.Database.ProviderName != null &&
             !db.Database.ProviderName.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
         {
             return await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
