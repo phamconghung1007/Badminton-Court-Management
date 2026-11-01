@@ -184,11 +184,7 @@ public partial class ShellViewModel : ViewModelBase
                 "Ngày 6 - Quy trình Đặt sân & Check-in",
                 "CalendarPlus"),
 
-            "BookingList" or "CustomerBookingHistory" => new PlaceholderPageViewModel(
-                "Danh sách & Lịch sử đặt sân",
-                "Quản lý tất cả phiếu đặt sân, lọc theo trạng thái (Pending, Confirmed, Completed, Cancelled), huỷ lịch và hoàn tiền.",
-                "Ngày 6 - Quản lý Phiếu đặt sân & Lịch sử",
-                "ClipboardList"),
+            "BookingList" or "CustomerBookingHistory" => _serviceProvider.GetRequiredService<BookingListViewModel>(),
 
             "AdminReports" or "ManagerReports" => new PlaceholderPageViewModel(
                 "Báo cáo & Thống kê doanh thu",

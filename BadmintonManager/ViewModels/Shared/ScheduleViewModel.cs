@@ -41,6 +41,9 @@ public partial class ScheduleViewModel : ViewModelBase
     public ObservableCollection<ScheduleBookingBlock> Bookings { get; } = new();
     public ObservableCollection<ScheduleEmptySlot> EmptySlots { get; } = new();
 
+    public double CanvasWidth => Math.Max(Courts.Count, 1) * ScheduleCourtHeader.DefaultWidth;
+    public double CanvasHeight => ScheduleMatrixHelper.TotalSlots * ScheduleBookingBlock.SlotHeight;
+
     // Time Dropdown Options
     public List<string> StartTimeOptions { get; } = new();
     public List<string> EndTimeOptions { get; } = new();
@@ -53,7 +56,8 @@ public partial class ScheduleViewModel : ViewModelBase
     [ObservableProperty] private string _formStartTimeStr = "08:00";
     [ObservableProperty] private string _formEndTimeStr = "09:00";
     [ObservableProperty] private int _formDurationMinutes = 60;
-    [ObservableProperty] private bool _formIsWalkIn;
+    [ObservableProperty] private bool _formIsWalkIn = true;
+    [ObservableProperty] private bool _formIsMember;
     [ObservableProperty] private string _formGuestName = string.Empty;
     [ObservableProperty] private string _formGuestPhone = string.Empty;
     [ObservableProperty] private CustomerDto? _formSelectedCustomer;
@@ -218,6 +222,7 @@ public partial class ScheduleViewModel : ViewModelBase
                 IsActive = courtDtos[i].IsActive
             });
         }
+        OnPropertyChanged(nameof(CanvasWidth));
 
         // 2. Nạp booking trong ngày của cơ sở
         var bookingDtos = await _bookingService.GetBookingsAsync(branchId, date);
@@ -320,7 +325,19 @@ public partial class ScheduleViewModel : ViewModelBase
 
     partial void OnFormIsWalkInChanged(bool value)
     {
+        if (FormIsMember == value)
+        {
+            FormIsMember = !value;
+        }
         _ = RecalculatePricePreviewAsync();
+    }
+
+    partial void OnFormIsMemberChanged(bool value)
+    {
+        if (FormIsWalkIn == value)
+        {
+            FormIsWalkIn = !value;
+        }
     }
 
     private void UpdateFormDuration()

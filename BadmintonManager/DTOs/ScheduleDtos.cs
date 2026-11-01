@@ -15,14 +15,20 @@ public class ScheduleTimeSlot
 
 public class ScheduleCourtHeader
 {
+    public const double DefaultWidth = 160.0;
+
     public int CourtId { get; set; }
     public string CourtName { get; set; } = string.Empty;
     public int ColumnIndex { get; set; }        // 0..5 (0-based)
     public bool IsActive { get; set; }
+    public double Width => DefaultWidth;
 }
 
 public class ScheduleBookingBlock
 {
+    public const double SlotWidth = 160.0;
+    public const double SlotHeight = 48.0;
+
     public int BookingId { get; set; }
     public string Code { get; set; } = string.Empty;
     public int CourtId { get; set; }
@@ -48,10 +54,18 @@ public class ScheduleBookingBlock
     public bool IsConfirmed => Status == BookingStatus.Confirmed;
     public bool IsCheckedIn => Status == BookingStatus.CheckedIn;
     public bool IsCompleted => Status == BookingStatus.Completed;
+
+    public double X => ColumnIndex * SlotWidth + 2;
+    public double Y => RowIndex * SlotHeight + 2;
+    public double Width => Math.Max(20, SlotWidth - 4);
+    public double Height => Math.Max(20, RowSpan * SlotHeight - 4);
 }
 
 public class ScheduleEmptySlot
 {
+    public const double SlotWidth = 160.0;
+    public const double SlotHeight = 48.0;
+
     public int CourtId { get; set; }
     public string CourtName { get; set; } = string.Empty;
     public int ColumnIndex { get; set; }        // 0-based
@@ -59,4 +73,9 @@ public class ScheduleEmptySlot
     public DateTime SlotStartTime { get; set; }
     public DateTime SlotEndTime { get; set; }
     public string TimeRangeText { get; set; } = string.Empty;
+
+    public double X => ColumnIndex * SlotWidth;
+    public double Y => RowIndex * SlotHeight;
+    public double Width => SlotWidth;
+    public double Height => SlotHeight;
 }

@@ -1,0 +1,681 @@
+<UserControl x:Class="BadmintonManager.Views.Pages.SchedulePage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:BadmintonManager.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="850" d:DesignWidth="1200"
+             Loaded="UserControl_Loaded">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:MoneyConverter x:Key="MoneyConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Header & Control Bar -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Title & Subtitle -->
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock Text="Lịch Sân Chi Nhánh"
+                           FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="{Binding ScheduleTitle}"
+                           FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}" Margin="0,3,0,0"/>
+            </StackPanel>
+
+            <!-- Actions: Branch Selector, Date Navigator, Refresh, New Booking -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Branch Selector (if Admin) -->
+                <ComboBox ItemsSource="{Binding Branches}"
+                          SelectedItem="{Binding SelectedBranch, Mode=TwoWay}"
+                          DisplayMemberPath="Name"
+                          Visibility="{Binding CanSelectBranch, Converter={StaticResource BoolToVisibilityConverter}}"
+                          Width="190" Margin="0,0,12,0"
+                          materialDesign:HintAssist.Hint="Chọn cơ sở"
+                          Style="{StaticResource MaterialDesignFloatingHintComboBox}"/>
+
+                <!-- Date Navigator -->
+                <Border Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="8"
+                        Padding="4,2" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding PreviousDayCommand}"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                Width="32" Height="32" ToolTip="Ngày trước">
+                            <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        </Button>
+
+                        <Button Command="{Binding TodayCommand}"
+                                Style="{StaticResource OutlineButtonStyle}"
+                                Height="30" Padding="10,0" Margin="4,0"
+                                FontSize="12" ToolTip="Hôm nay">
+                            <TextBlock Text="Hôm nay" VerticalAlignment="Center"/>
+                        </Button>
+
+                        <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
+                                    Width="120" Margin="4,0"
+                                    BorderThickness="0"
+                                    VerticalAlignment="Center"
+                                    materialDesign:TextFieldAssist.UnderlineBrush="{StaticResource PrimaryBrush}"/>
+
+                        <Button Command="{Binding NextDayCommand}"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                Width="32" Height="32" ToolTip="Ngày sau">
+                            <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Refresh Button -->
+                <Button Command="{Binding RefreshScheduleCommand}"
+                        Style="{StaticResource OutlineButtonStyle}"
+                        Margin="0,0,10,0" Height="38">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Làm mới" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- New Booking Button -->
+                <Button Command="{Binding OpenCreateBookingFormCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Height="38">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CalendarPlus" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Đặt sân mới" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Status Legend Bar -->
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="14,10" Margin="0,0,0,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"
+                                             Foreground="{StaticResource TextSecondaryBrush}"
+                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="Chú thích trạng thái:" FontWeight="SemiBold" FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- Pending -->
+                    <StackPanel Orientation="Horizontal" Margin="10,2">
+                        <Border Width="14" Height="14" Background="#F59E0B" CornerRadius="3" Margin="0,0,6,0"/>
+                        <TextBlock Text="Chờ duyệt (Pending)" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Confirmed -->
+                    <StackPanel Orientation="Horizontal" Margin="10,2">
+                        <Border Width="14" Height="14" Background="#2563EB" CornerRadius="3" Margin="0,0,6,0"/>
+                        <TextBlock Text="Đã duyệt (Confirmed)" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- CheckedIn -->
+                    <StackPanel Orientation="Horizontal" Margin="10,2">
+                        <Border Width="14" Height="14" Background="#10B981" CornerRadius="3" Margin="0,0,6,0"/>
+                        <TextBlock Text="Đang chơi (Checked-in)" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Completed -->
+                    <StackPanel Orientation="Horizontal" Margin="10,2">
+                        <Border Width="14" Height="14" Background="#6B7280" CornerRadius="3" Margin="0,0,6,0"/>
+                        <TextBlock Text="Hoàn thành (Completed)" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- NoShow -->
+                    <StackPanel Orientation="Horizontal" Margin="10,2">
+                        <Border Width="14" Height="14" Background="#EF4444" CornerRadius="3" Margin="0,0,6,0"/>
+                        <TextBlock Text="Vắng mặt (No-show)" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Empty -->
+                    <StackPanel Orientation="Horizontal" Margin="10,2">
+                        <Border Width="14" Height="14" Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="3" Margin="0,0,6,0"/>
+                        <TextBlock Text="Ô trống (Click để đặt)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </WrapPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Body: Schedule Matrix + Right Drawers -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Column 0: Schedule Grid Matrix -->
+            <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,0,8,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Top Sticky Header: Time column placeholder + Court names -->
+                    <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="70"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="Giờ \ Sân" FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                            <!-- Court Header Items -->
+                            <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding Courts}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Width="{Binding Width}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0" Padding="8,4">
+                                                <StackPanel HorizontalAlignment="Center">
+                                                    <TextBlock Text="{Binding CourtName}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource PrimaryDarkBrush}" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="Đang hoạt động" FontSize="10" Foreground="#15803D" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- Scrollable Schedule Body: Time Slots Column + Canvas of EmptySlots & BookingBlocks -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <Grid HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="70"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Left: 36 Time Slot Labels (06:00 to 24:00) -->
+                            <ItemsControl Grid.Column="0" ItemsSource="{Binding TimeSlots}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Height="48" BorderBrush="#F1F5F9" BorderThickness="0,0,1,1" Background="#FAFAFA">
+                                            <TextBlock Text="{Binding TimeDisplay}" FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Right: Canvas Matrix with Empty Slots & Booking Blocks -->
+                            <Grid Grid.Column="1" Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}">
+                                <!-- Layer 1: Empty Slots (clickable) -->
+                                <ItemsControl ItemsSource="{Binding EmptySlots}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                            <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Width="{Binding Width}" Height="{Binding Height}"
+                                                    BorderBrush="#E2E8F0" BorderThickness="0,0,1,1"
+                                                    Background="Transparent" Cursor="Hand"
+                                                    ToolTip="{Binding TimeRangeText}">
+                                                <Border.InputBindings>
+                                                    <MouseBinding Gesture="LeftClick"
+                                                                  Command="{Binding DataContext.OpenCreateBookingFormCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                  CommandParameter="{Binding}"/>
+                                                </Border.InputBindings>
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Background" Value="#F0FDF4"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="+" FontSize="14" Foreground="#94A3B8"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Opacity="0.4"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Layer 2: Booking Blocks -->
+                                <ItemsControl ItemsSource="{Binding Bookings}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                            <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Width="{Binding Width}" Height="{Binding Height}"
+                                                    CornerRadius="6"
+                                                    BorderThickness="1"
+                                                    Background="{Binding BackgroundHex}"
+                                                    BorderBrush="{Binding BorderHex}"
+                                                    Cursor="Hand"
+                                                    Padding="6,4">
+                                                <Border.InputBindings>
+                                                    <MouseBinding Gesture="LeftClick"
+                                                                  Command="{Binding DataContext.OpenBookingDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                  CommandParameter="{Binding}"/>
+                                                </Border.InputBindings>
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="*"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+
+                                                    <!-- Header: Code + Time -->
+                                                    <StackPanel Grid.Row="0">
+                                                        <TextBlock Text="{Binding Code, StringFormat='#{0}'}"
+                                                                   FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding TimeRangeText}"
+                                                                   FontSize="10" Foreground="#E0F2FE" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+
+                                                    <!-- Customer info -->
+                                                    <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,2,0,0">
+                                                        <TextBlock Text="{Binding CustomerDisplayName}"
+                                                                   FontWeight="SemiBold" FontSize="11" Foreground="#FFFFFF"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding CustomerPhone}"
+                                                                   FontSize="10" Foreground="#F3F4F6"/>
+                                                    </StackPanel>
+
+                                                    <!-- Status badge & Final amount -->
+                                                    <Grid Grid.Row="2">
+                                                        <TextBlock Text="{Binding StatusText}"
+                                                                   FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"
+                                                                   HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+                                                        <TextBlock Text="{Binding FinalAmount, Converter={StaticResource MoneyConverter}}"
+                                                                   FontSize="9" FontWeight="SemiBold" Foreground="#FEF08A"
+                                                                   HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                                                    </Grid>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Column 1: Right Side Drawers -->
+
+            <!-- Drawer 1: Create Booking Form -->
+            <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Width="420" Margin="8,0,0,0"
+                    Visibility="{Binding IsBookingFormOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Form Header -->
+                        <Grid Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Đặt Sân Mới" FontSize="18" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}"/>
+                                <TextBlock Text="Tạo phiếu đặt sân theo tiêu chuẩn BR-01 -> BR-05" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                            <Button Command="{Binding CloseCreateBookingFormCommand}"
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top" Width="30" Height="30">
+                                <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- Court & Date -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <DatePicker Grid.Column="0" SelectedDate="{Binding FormDate, Mode=TwoWay}"
+                                        materialDesign:HintAssist.Hint="Ngày chơi" Margin="0,0,6,0"
+                                        Style="{StaticResource MaterialDesignFloatingHintDatePicker}"/>
+
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding Courts}"
+                                      SelectedItem="{Binding FormSelectedCourt, Mode=TwoWay}"
+                                      DisplayMemberPath="CourtName"
+                                      materialDesign:HintAssist.Hint="Chọn sân" Margin="6,0,0,0"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"/>
+                        </Grid>
+
+                        <!-- Time Range -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding StartTimeOptions}"
+                                      SelectedItem="{Binding FormStartTimeStr, Mode=TwoWay}"
+                                      materialDesign:HintAssist.Hint="Giờ bắt đầu" Margin="0,0,6,0"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"/>
+
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding EndTimeOptions}"
+                                      SelectedItem="{Binding FormEndTimeStr, Mode=TwoWay}"
+                                      materialDesign:HintAssist.Hint="Giờ kết thúc" Margin="6,0,0,0"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"/>
+                        </Grid>
+
+                        <!-- Duration Display -->
+                        <Border Background="#F1F5F9" CornerRadius="6" Padding="10,6" Margin="0,0,0,14">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClockOutline" Width="16" Height="16" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Thời lượng đặt: " FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding FormDurationMinutes, StringFormat='{}{0} phút'}" FontWeight="Bold" FontSize="12" Foreground="{StaticResource PrimaryDarkBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Customer Mode: Walk-in vs Member -->
+                        <TextBlock Text="Thông tin khách hàng" FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <RadioButton Content="Khách vãng lai" IsChecked="{Binding FormIsWalkIn, Mode=TwoWay}" Margin="0,0,16,0"/>
+                            <RadioButton Content="Hội viên thành viên" IsChecked="{Binding FormIsMember, Mode=TwoWay}"/>
+                        </StackPanel>
+
+                        <!-- If Walk-in: Name & Phone -->
+                        <StackPanel Visibility="{Binding FormIsWalkIn, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,12">
+                            <TextBox Text="{Binding FormGuestName, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Họ tên khách vãng lai *"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="0,0,0,10"/>
+                            <TextBox Text="{Binding FormGuestPhone, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Số điện thoại liên hệ *"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        </StackPanel>
+
+                        <!-- If Member: Search & Selection -->
+                        <StackPanel Visibility="{Binding FormIsMember, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,12">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding CustomerSearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="Tìm theo SĐT hoặc Tên hội viên..."
+                                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                <Button Grid.Column="1" Command="{Binding SearchCustomerCommand}"
+                                        Style="{StaticResource OutlineButtonStyle}" Height="34" Margin="6,0,0,0">
+                                    <materialDesign:PackIcon Kind="Magnify" Width="18" Height="18"/>
+                                </Button>
+                            </Grid>
+
+                            <!-- Found Customers List -->
+                            <ItemsControl ItemsSource="{Binding FoundCustomers}" MaxHeight="120">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="6,4" Background="Transparent" Cursor="Hand">
+                                            <Border.InputBindings>
+                                                <MouseBinding Gesture="LeftClick"
+                                                              Command="{Binding DataContext.SelectCustomerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                              CommandParameter="{Binding}"/>
+                                            </Border.InputBindings>
+                                            <Grid>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding FullName}" FontWeight="Bold" FontSize="12"/>
+                                                    <TextBlock Text="{Binding PhoneNumber}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding TierName, StringFormat='Hạng {0}'}" FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource PrimaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Selected Customer Card -->
+                            <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,8,0,0">
+                                <Grid>
+                                    <StackPanel>
+                                        <TextBlock Text="Hội viên được chọn:" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding FormSelectedCustomer.FullName, FallbackValue='(Chưa chọn hội viên)'}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource PrimaryDarkBrush}"/>
+                                        <TextBlock Text="{Binding FormSelectedCustomer.TierName, StringFormat='Hạng thẻ: {0}'}" FontSize="11" Foreground="{StaticResource PrimaryBrush}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <Button Command="{Binding ClearCustomerCommand}"
+                                            Style="{StaticResource MaterialDesignIconButton}"
+                                            HorizontalAlignment="Right" VerticalAlignment="Top" Width="24" Height="24">
+                                        <materialDesign:PackIcon Kind="Close" Width="14" Height="14"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Live Pricing Preview Card -->
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,16">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="TẠM TÍNH TIỀN SÂN" FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Button Command="{Binding RecalculatePricePreviewCommand}"
+                                            Style="{StaticResource MaterialDesignIconButton}" Width="24" Height="24" HorizontalAlignment="Right" ToolTip="Tính lại giá">
+                                        <materialDesign:PackIcon Kind="Calculator" Width="16" Height="16" Foreground="{StaticResource PrimaryBrush}"/>
+                                    </Button>
+                                </Grid>
+
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Đơn giá gốc:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding FormSubTotal, Converter={StaticResource MoneyConverter}}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                </Grid>
+
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Giảm giá hội viên:" FontSize="12" Foreground="#15803D"/>
+                                    <TextBlock Text="{Binding FormDiscountAmount, Converter={StaticResource MoneyConverter}, StringFormat='-{0}'}" FontSize="12" FontWeight="Bold" Foreground="#15803D" HorizontalAlignment="Right"/>
+                                </Grid>
+
+                                <Separator Margin="0,6" Background="#E2E8F0"/>
+
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="TỔNG TIỀN:" FontWeight="Bold" FontSize="14" Foreground="{StaticResource PrimaryDarkBrush}"/>
+                                    <TextBlock Text="{Binding FormFinalAmount, Converter={StaticResource MoneyConverter}}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource PrimaryBrush}" HorizontalAlignment="Right"/>
+                                </Grid>
+
+                                <Grid Margin="0,4,0,0">
+                                    <TextBlock Text="Tiền cọc tối thiểu (30%):" FontSize="12" FontWeight="SemiBold" Foreground="#B45309"/>
+                                    <TextBlock Text="{Binding FormDepositAmount, Converter={StaticResource MoneyConverter}}" FontSize="13" FontWeight="Bold" Foreground="#D97706" HorizontalAlignment="Right"/>
+                                </Grid>
+
+                                <TextBlock Text="{Binding FormPricingNote}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Submit Buttons -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0" Command="{Binding CloseCreateBookingFormCommand}"
+                                    Style="{StaticResource OutlineButtonStyle}" Content="Hủy bỏ" Margin="0,0,6,0" Height="40"/>
+
+                            <Button Grid.Column="1" Command="{Binding SubmitCreateBookingCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}" Content="Tạo Đặt Sân" Margin="6,0,0,0" Height="40"/>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Drawer 2: Booking Details Drawer -->
+            <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Width="420" Margin="8,0,0,0"
+                    Visibility="{Binding IsDetailsOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Header -->
+                        <Grid Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="{Binding DetailedBooking.Code, StringFormat='Đơn #{0}'}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}"/>
+                                <TextBlock Text="Thông tin chi tiết phiếu đặt sân" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                            <Button Command="{Binding CloseBookingDetailsCommand}"
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top" Width="30" Height="30">
+                                <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- Status Badge -->
+                        <Border Background="#EFF6FF" CornerRadius="6" Padding="12,8" Margin="0,0,0,14">
+                            <Grid>
+                                <TextBlock Text="Trạng thái hiện tại:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding DetailedBooking.StatusText}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Court & Branch -->
+                        <TextBlock Text="THÔNG TIN SÂN CHƠI" FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,14">
+                            <StackPanel>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Cơ sở:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding DetailedBooking.BranchName}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Sân thi đấu:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding DetailedBooking.CourtName}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Khung giờ chơi:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding DetailedBooking.TimeRangeText}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Thời lượng:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding DetailedBooking.DurationMinutes, StringFormat='{}{0} phút'}" FontSize="12" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Customer Info -->
+                        <TextBlock Text="KHÁCH HÀNG" FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,14">
+                            <StackPanel>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Họ tên:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding DetailedBooking.DisplayName}" FontSize="12" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Số điện thoại:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding DetailedBooking.DisplayPhone}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Loại khách:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding DetailedBooking.CustomerTierName, StringFormat='Hội viên ({0})', FallbackValue='Khách vãng lai'}" FontSize="12" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Payment & Financial Info -->
+                        <TextBlock Text="THANH TOÁN &amp; TÀI CHÍNH" FontWeight="Bold" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16">
+                            <StackPanel>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Tổng tiền sân:" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding DetailedBooking.TotalAmount, Converter={StaticResource MoneyConverter}}" FontSize="12" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Giảm giá:" FontSize="12" Foreground="#15803D"/>
+                                    <TextBlock Text="{Binding DetailedBooking.DiscountAmount, Converter={StaticResource MoneyConverter}, StringFormat='-{0}'}" FontSize="12" FontWeight="SemiBold" Foreground="#15803D" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Separator Margin="0,4" Background="#E2E8F0"/>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Thành tiền:" FontWeight="Bold" FontSize="13" Foreground="{StaticResource PrimaryDarkBrush}"/>
+                                    <TextBlock Text="{Binding DetailedBooking.FinalAmount, Converter={StaticResource MoneyConverter}}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource PrimaryBrush}" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Đã đặt cọc:" FontSize="12" Foreground="#B45309"/>
+                                    <TextBlock Text="{Binding DetailedBooking.DepositAmount, Converter={StaticResource MoneyConverter}}" FontSize="12" FontWeight="Bold" Foreground="#D97706" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid Margin="0,2">
+                                    <TextBlock Text="Đã thanh toán:" FontSize="12" Foreground="#15803D"/>
+                                    <TextBlock Text="{Binding DetailedBooking.PaidAmount, Converter={StaticResource MoneyConverter}}" FontSize="12" FontWeight="Bold" Foreground="#15803D" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Action Buttons: Duyệt, Check-in, Hủy -->
+                        <StackPanel>
+                            <!-- Nút Duyệt đơn (nếu Pending) -->
+                            <Button Command="{Binding ConfirmBookingCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Visibility="{Binding DetailedBooking.IsPending, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Margin="0,0,0,8" Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CheckCircleOutline" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Duyệt Đơn Đặt Sân" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Nút Check-in (nếu Confirmed) -->
+                            <Button Command="{Binding CheckInBookingCommand}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Background="#10B981" BorderBrush="#059669"
+                                    Visibility="{Binding DetailedBooking.IsConfirmed, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Margin="0,0,0,8" Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AccountCheck" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Check-in Vào Sân" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Nút Hủy đơn (nếu Pending hoặc Confirmed) -->
+                            <Button Command="{Binding CancelBookingCommand}"
+                                    Style="{StaticResource OutlineButtonStyle}"
+                                    BorderBrush="#EF4444" Foreground="#EF4444"
+                                    Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Cancel" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Hủy Đơn Đặt Sân" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -59,6 +59,7 @@ public class ShellNavigationTests
         services.AddTransient<CustomerDashboardViewModel>();
         services.AddTransient<UserProfileViewModel>();
         services.AddTransient<ScheduleViewModel>();
+        services.AddTransient<BookingListViewModel>();
         services.AddTransient<ShellViewModel>();
 
         return services.BuildServiceProvider();
@@ -180,6 +181,23 @@ public class ShellNavigationTests
 
         // Assert
         shell.CurrentPageViewModel.Should().BeOfType<ScheduleViewModel>();
+    }
+
+    [Fact]
+    public void ShellViewModel_Staff_NavigatesToBookingList_ResolvesBookingListViewModel()
+    {
+        // Arrange
+        var context = new CurrentUserContext();
+        context.SetUser(3, "staff1", "Staff User", UserRole.Staff, 1, "Cơ sở Cầu Giấy");
+        var sp = CreateTestServiceProvider(context);
+        var shell = sp.GetRequiredService<ShellViewModel>();
+
+        // Act
+        var bookingListItem = shell.MenuItems.First(m => m.PageKey == "BookingList");
+        shell.SelectedMenuItem = bookingListItem;
+
+        // Assert
+        shell.CurrentPageViewModel.Should().BeOfType<BookingListViewModel>();
     }
 
     [Fact]

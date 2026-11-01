@@ -56,6 +56,12 @@
         <DataTemplate DataType="{x:Type sharedVm:UserProfileViewModel}">
             <pages:UserProfilePage />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type sharedVm:ScheduleViewModel}">
+            <pages:SchedulePage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type sharedVm:BookingListViewModel}">
+            <pages:BookingListPage />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type baseVm:PlaceholderPageViewModel}">
             <pages:PlaceholderPageView />
         </DataTemplate>
