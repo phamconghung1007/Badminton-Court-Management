@@ -11,6 +11,7 @@ using BadmintonManager.Models.Entities;
 using BadmintonManager.Models.Enums;
 using BadmintonManager.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BadmintonManager.Services;
 
@@ -173,13 +174,24 @@ public class BookingService : IBookingService
         };
     }
 
+    private async Task<IDbContextTransaction> BeginTransactionSafelyAsync(AppDbContext db)
+    {
+        if (db.Database.IsRelational() && db.Database.ProviderName != null &&
+            !db.Database.ProviderName.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
+        {
+            return await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        }
+
+        return await db.Database.BeginTransactionAsync();
+    }
+
     public async Task<BookingItemDto> CreateBookingAsync(CreateBookingRequest request)
     {
         // 1. Kiểm tra giờ & quy tắc cơ bản (BR-01, 02, 05)
-        ValidateBookingTime(request.StartTime, request.EndTime, request.BookingType == BookingType.WalkIn);
+        await ValidateBookingTimeAsync(request.StartTime, request.EndTime, request.BookingType == BookingType.WalkIn);
 
         await using var db = await _factory.CreateDbContextAsync();
-        using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        await using var transaction = await BeginTransactionSafelyAsync(db);
 
         try
         {
@@ -189,10 +201,10 @@ public class BookingService : IBookingService
                 throw new BusinessException("Sân không tồn tại hoặc đang tạm ngưng hoạt động.");
             }
 
-            // Role check
+            // Phân quyền cơ sở (Quy tắc bắt buộc Section 2 & 4)
             if (_currentUser.IsManager || _currentUser.IsStaff)
             {
-                if (_currentUser.BranchId.HasValue && court.BranchId != _currentUser.BranchId.Value)
+                if (!_currentUser.BranchId.HasValue || court.BranchId != _currentUser.BranchId.Value)
                 {
                     throw new ForbiddenException("Bạn chỉ có thể đặt sân thuộc cơ sở của mình.");
                 }
@@ -202,25 +214,35 @@ public class BookingService : IBookingService
             if (_currentUser.IsCustomer)
             {
                 customerId = _currentUser.CustomerId;
+                if (!customerId.HasValue)
+                {
+                    throw new ForbiddenException("Không tìm thấy thông tin hồ sơ khách hàng của tài khoản.");
+                }
             }
 
-            // Check overlap & 30-min gap rule (BR-03, BR-04)
+            // Kiểm tra trùng lịch (BR-03) và quy tắc khoảng trống 30 phút (BR-04)
             await ValidateOverlapAndGapRulesAsync(db, request.CourtId, request.StartTime, request.EndTime, null);
 
-            // Calculate price
+            // Tính giá theo ô 30 phút (BR-07/08), giảm giá hội viên (BR-09), tính cọc (BR-11)
             var pricing = await _pricingService.CalculatePriceAsync(request.CourtId, request.StartTime, request.EndTime, customerId);
 
-            // Determine status (A7)
+            // Xác định trạng thái ban đầu theo A7
             BookingStatus initialStatus = _currentUser.IsCustomer
                 ? BookingStatus.Pending
                 : (request.BookingType == BookingType.WalkIn ? BookingStatus.CheckedIn : BookingStatus.Confirmed);
 
             int userId = _currentUser.Id ?? 1;
 
-            // Generate Booking Code
+            // Sinh mã Code định dạng chuẩn BK{yyyyMMdd}-{seq:D3}
             string dateStr = request.StartTime.ToString("yyyyMMdd");
-            int todaySeq = await db.Bookings.CountAsync(b => b.Code.StartsWith($"BK{dateStr}")) + 1;
-            string code = $"BK{dateStr}-{todaySeq:D3}";
+            int countToday = await db.Bookings.CountAsync(b => b.Code.StartsWith($"BK{dateStr}")) + 1;
+            string code;
+            int seq = countToday;
+            do
+            {
+                code = $"BK{dateStr}-{seq:D3}";
+                seq++;
+            } while (await db.Bookings.AnyAsync(b => b.Code == code));
 
             var booking = new Booking
             {
@@ -240,7 +262,7 @@ public class BookingService : IBookingService
                 DepositAmount = pricing.DepositAmount,
                 CreatedByUserId = userId,
                 CreatedAt = DateTime.Now,
-                ConfirmedByUserId = initialStatus != BookingStatus.Pending ? userId : null,
+                ConfirmedByUserId = (initialStatus == BookingStatus.Confirmed || initialStatus == BookingStatus.CheckedIn) ? userId : null,
                 CheckedInAt = initialStatus == BookingStatus.CheckedIn ? DateTime.Now : null
             };
 
@@ -264,10 +286,10 @@ public class BookingService : IBookingService
 
     public async Task<BookingItemDto> UpdateBookingAsync(UpdateBookingRequest request)
     {
-        ValidateBookingTime(request.StartTime, request.EndTime, false);
+        await ValidateBookingTimeAsync(request.StartTime, request.EndTime, false);
 
         await using var db = await _factory.CreateDbContextAsync();
-        using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        await using var transaction = await BeginTransactionSafelyAsync(db);
 
         try
         {
@@ -282,6 +304,20 @@ public class BookingService : IBookingService
             if (DateTime.Now >= booking.StartTime)
             {
                 throw new BusinessException("Không thể chỉnh sửa đơn đặt sân đã đến giờ bắt đầu.");
+            }
+
+            var court = await db.Courts.FindAsync(request.CourtId);
+            if (court == null || !court.IsActive)
+            {
+                throw new BusinessException("Sân không tồn tại hoặc đang tạm ngưng hoạt động.");
+            }
+
+            if (_currentUser.IsManager || _currentUser.IsStaff)
+            {
+                if (!_currentUser.BranchId.HasValue || court.BranchId != _currentUser.BranchId.Value)
+                {
+                    throw new ForbiddenException("Bạn chỉ có thể chỉnh sửa đặt sân thuộc cơ sở của mình.");
+                }
             }
 
             // Customer đổi lịch: A9 nếu dưới 24h
@@ -314,6 +350,11 @@ public class BookingService : IBookingService
             await transaction.CommitAsync();
 
             return await GetBookingByIdAsync(booking.Id);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await transaction.RollbackAsync();
+            throw new BusinessException("Khung giờ vừa có người khác đặt, vui lòng chọn lại.");
         }
         catch
         {
@@ -557,37 +598,57 @@ public class BookingService : IBookingService
         await db.SaveChangesAsync();
     }
 
-    private static void ValidateBookingTime(DateTime start, DateTime end, bool isWalkIn)
+    private async Task ValidateBookingTimeAsync(DateTime start, DateTime end, bool isWalkIn)
     {
+        if (end <= start)
+        {
+            throw new BusinessException("Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
+        }
+
         // BR-01: Giờ đặt nằm trong [06:00, 24:00], bắt đầu và kết thúc phải là phút 00 hoặc 30
-        if (start.Minute != 0 && start.Minute != 30)
+        if ((start.Minute != 0 && start.Minute != 30) || start.Second != 0 || start.Millisecond != 0)
         {
             throw new BusinessException("Giờ bắt đầu phải là mốc đúng giờ (00 phút) hoặc rưỡi (30 phút).");
         }
-        if (end.Minute != 0 && end.Minute != 30)
+        if ((end.Minute != 0 && end.Minute != 30) || end.Second != 0 || end.Millisecond != 0)
         {
             throw new BusinessException("Giờ kết thúc phải là mốc đúng giờ (00 phút) hoặc rưỡi (30 phút).");
         }
 
-        int startMin = start.Hour * 60 + start.Minute;
-        int endMin = (end.Date > start.Date || (end.Hour == 0 && end.Minute == 0)) ? 1440 : (end.Hour * 60 + end.Minute);
+        DateTime dayStart = start.Date.AddHours(6); // 06:00
+        DateTime dayEnd = start.Date.AddDays(1);    // 24:00 (= 00:00 ngày hôm sau)
 
-        if (startMin < 360 || endMin > 1440)
+        if (start < dayStart || end > dayEnd)
         {
             throw new BusinessException("Thời gian đặt sân phải nằm trong khung giờ hoạt động (06:00 - 24:00).");
         }
 
-        // BR-02: Thời lượng trong [60, 240] phút
+        // BR-02: Thời lượng trong [Min, Max] (mặc định 60–240 phút)
+        int minDuration = await _settingService.GetIntSettingAsync(Constants.Settings.MinDurationMinutes, 60);
+        int maxDuration = await _settingService.GetIntSettingAsync(Constants.Settings.MaxDurationMinutes, 240);
+
         int duration = (int)(end - start).TotalMinutes;
-        if (duration < 60 || duration > 240)
+        if (duration < minDuration || duration > maxDuration)
         {
-            throw new BusinessException("Thời lượng đặt sân phải từ 60 phút đến tối đa 4 giờ (240 phút).");
+            throw new BusinessException($"Thời lượng đặt sân phải từ {minDuration} phút đến tối đa {maxDuration / 60} giờ ({maxDuration} phút).");
         }
 
         // BR-05: Không đặt trong quá khứ
-        if (!isWalkIn && start < DateTime.Now.AddMinutes(-5))
+        if (!isWalkIn)
         {
-            throw new BusinessException("Không thể đặt sân trong quá khứ.");
+            if (start < DateTime.Now.AddMinutes(-1))
+            {
+                throw new BusinessException("Không thể đặt sân trong quá khứ.");
+            }
+        }
+        else
+        {
+            int roundedMinute = DateTime.Now.Minute < 30 ? 0 : 30;
+            DateTime nowSlot = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, roundedMinute, 0);
+            if (start < nowSlot)
+            {
+                throw new BusinessException("Không thể đặt sân cho khách vãng lai trước thời điểm hiện tại.");
+            }
         }
     }
 
@@ -599,8 +660,7 @@ public class BookingService : IBookingService
         var existingBookings = await db.Bookings
             .Where(b => b.CourtId == courtId &&
                         b.Status != BookingStatus.Cancelled &&
-                        b.StartTime >= s.Date &&
-                        b.StartTime < s.Date.AddDays(1) &&
+                        b.StartTime < dayEnd && b.EndTime > dayStart &&
                         (!excludeBookingId.HasValue || b.Id != excludeBookingId.Value))
             .OrderBy(b => b.StartTime)
             .ToListAsync();
@@ -612,8 +672,9 @@ public class BookingService : IBookingService
             throw new BusinessException("Khung giờ này đã có người đặt trên sân đã chọn.");
         }
 
-        // BR-04: Quy tắc khoảng trống 30 phút
-        // prevEnd = max EndTime <= s (không có thì 06:00)
+        // BR-04: Quy tắc khoảng trống (A4): với booking mới, tính khoảng trống đến booking liền trước
+        // (hoặc 06:00) và liền sau (hoặc 24:00) trên cùng sân, cùng ngày.
+        // Nếu có khoảng trống đúng 30 phút thì từ chối.
         DateTime prevEnd = dayStart;
         var prevs = existingBookings.Where(b => b.EndTime <= s).ToList();
         if (prevs.Any())
@@ -621,7 +682,6 @@ public class BookingService : IBookingService
             prevEnd = prevs.Max(b => b.EndTime);
         }
 
-        // nextStart = min StartTime >= e (không có thì 24:00)
         DateTime nextStart = dayEnd;
         var nexts = existingBookings.Where(b => b.StartTime >= e).ToList();
         if (nexts.Any())
