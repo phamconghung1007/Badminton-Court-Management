@@ -51,6 +51,7 @@ public partial class App : Application
                 services.AddTransient<IBookingService, BookingService>();
                 services.AddTransient<IPricingService, PricingService>();
                 services.AddTransient<IPaymentService, PaymentService>();
+                services.AddTransient<IInvoiceService, InvoiceService>();
                 services.AddTransient<IMembershipService, MembershipService>();
                 services.AddTransient<ICustomerService, CustomerService>();
                 services.AddTransient<IBranchCourtService, BranchCourtService>();

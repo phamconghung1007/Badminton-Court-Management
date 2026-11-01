@@ -1,0 +1,86 @@
+<Window x:Class="BadmintonManager.Views.Dialogs.InvoicePreviewDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="Xem Trước Hóa Đơn Thanh Toán"
+        Height="720" Width="560"
+        MinHeight="600" MinWidth="480"
+        WindowStartupLocation="CenterScreen"
+        Background="#F1F5F9">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Header -->
+        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                Padding="20,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Xem Trước Hóa Đơn Thanh Toán"
+                               FontSize="16" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}"/>
+                    <TextBlock x:Name="TxtSubtitle" Text="Mã hóa đơn: #---"
+                               FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" Click="BtnClose_Click"
+                        Style="{StaticResource MaterialDesignIconButton}" Width="32" Height="32">
+                    <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Document Viewer Area -->
+        <Border Grid.Row="1" Margin="20,16" Background="White"
+                CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="12" Direction="-90"
+                                  RenderingBias="Quality" ShadowDepth="2"
+                                  Color="#1E293B" Opacity="0.08"/>
+            </Border.Effect>
+            <FlowDocumentScrollViewer x:Name="DocumentViewer"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Background="Transparent"
+                                      BorderThickness="0"/>
+        </Border>
+
+        <!-- Bottom Action Bar -->
+        <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+                Padding="20,12">
+            <Grid>
+                <TextBlock Text="Định dạng chuẩn in ấn nhiệt hoặc A4/A5"
+                           FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                           VerticalAlignment="Center"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Click="BtnClose_Click"
+                            Style="{StaticResource OutlineButtonStyle}"
+                            Content="Đóng" Width="90" Height="36" Margin="0,0,10,0"/>
+
+                    <Button Click="BtnPrint_Click"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Height="36" Padding="14,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Printer" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="In Hóa Đơn" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
