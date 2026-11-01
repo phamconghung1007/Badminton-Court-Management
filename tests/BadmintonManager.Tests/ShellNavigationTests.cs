@@ -50,6 +50,7 @@ public class ShellNavigationTests
         services.AddSingleton<IPricingService>(pricingService);
         services.AddTransient<IBookingService, BookingService>();
         services.AddTransient<IBranchCourtService, BranchCourtService>();
+        services.AddTransient<ICustomerService, CustomerService>();
 
         // ViewModels
         services.AddTransient<AdminDashboardViewModel>();

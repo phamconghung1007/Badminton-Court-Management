@@ -16,9 +16,21 @@ using Xunit;
 
 namespace BadmintonManager.Tests;
 
+public class RecordingDialogService : IDialogService
+{
+    public string? LastInfoMessage { get; private set; }
+    public string? LastErrorMessage { get; private set; }
+    public string? LastWarningMessage { get; private set; }
+
+    public void ShowInfo(string message, string title = "Thông báo") => LastInfoMessage = message;
+    public void ShowWarning(string message, string title = "Cảnh báo") => LastWarningMessage = message;
+    public void ShowError(string message, string title = "Lỗi") => LastErrorMessage = message;
+    public bool ShowConfirmation(string message, string title = "Xác nhận") => true;
+}
+
 public class ScheduleServiceTests
 {
-    private (TestDbContextFactory factory, CurrentUserContext currentUser, BookingService bookingService, BranchCourtService branchCourtService, StubDialogService dialogService) CreateTestSetup(
+    private (TestDbContextFactory factory, CurrentUserContext currentUser, BookingService bookingService, BranchCourtService branchCourtService, PricingService pricingService, CustomerService customerService, RecordingDialogService dialogService) CreateTestSetup(
         UserRole role = UserRole.Staff,
         int? branchId = 1)
     {
@@ -34,9 +46,10 @@ public class ScheduleServiceTests
         var pricingService = new PricingService(factory, settingService, currentUser);
         var bookingService = new BookingService(factory, currentUser, pricingService, settingService);
         var branchCourtService = new BranchCourtService(factory, currentUser);
-        var dialogService = new StubDialogService();
+        var customerService = new CustomerService(factory, currentUser);
+        var dialogService = new RecordingDialogService();
 
-        return (factory, currentUser, bookingService, branchCourtService, dialogService);
+        return (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService);
     }
 
     #region ScheduleMatrixHelper Unit Tests
@@ -198,13 +211,13 @@ public class ScheduleServiceTests
     public async Task ScheduleViewModel_StaffRole_BranchIsLockedToStaffBranch()
     {
         // Arrange
-        var (factory, currentUser, bookingService, branchCourtService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
         await using (var db = await factory.CreateDbContextAsync())
         {
             await DbSeeder.SeedAsync(db);
         }
 
-        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, dialogService);
+        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService);
 
         // Act
         await vm.InitializeAsync();
@@ -220,13 +233,13 @@ public class ScheduleServiceTests
     public async Task ScheduleViewModel_AdminRole_CanSelectBranch()
     {
         // Arrange
-        var (factory, currentUser, bookingService, branchCourtService, dialogService) = CreateTestSetup(UserRole.Admin, branchId: null);
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Admin, branchId: null);
         await using (var db = await factory.CreateDbContextAsync())
         {
             await DbSeeder.SeedAsync(db);
         }
 
-        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, dialogService);
+        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService);
 
         // Act
         await vm.InitializeAsync();
@@ -248,13 +261,13 @@ public class ScheduleServiceTests
     public async Task ScheduleViewModel_DateNavigation_UpdatesDateAndTitle()
     {
         // Arrange
-        var (factory, currentUser, bookingService, branchCourtService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
         await using (var db = await factory.CreateDbContextAsync())
         {
             await DbSeeder.SeedAsync(db);
         }
 
-        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, dialogService);
+        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService);
         await vm.InitializeAsync();
 
         var initialDate = vm.SelectedDate;
@@ -268,6 +281,179 @@ public class ScheduleServiceTests
 
         await vm.TodayAsync();
         vm.SelectedDate.Date.Should().Be(DateTime.Today.Date);
+    }
+
+    [Fact]
+    public async Task ScheduleViewModel_OpenCreateBookingForm_FromSlot_PrefillsCourtAndTime()
+    {
+        // Arrange
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService);
+        vm.SelectedDate = DateTime.Today.AddDays(3);
+        await vm.InitializeAsync();
+
+        var slot = new ScheduleEmptySlot
+        {
+            CourtId = 2,
+            CourtName = "Sân 2",
+            ColumnIndex = 1,
+            RowIndex = 4,
+            SlotStartTime = vm.SelectedDate.Date.AddHours(8),
+            SlotEndTime = vm.SelectedDate.Date.AddHours(8).AddMinutes(30)
+        };
+
+        // Act
+        await vm.OpenCreateBookingFormAsync(slot);
+
+        // Assert
+        vm.IsBookingFormOpen.Should().BeTrue();
+        vm.FormSelectedCourt.Should().NotBeNull();
+        vm.FormSelectedCourt!.CourtId.Should().Be(2);
+        vm.FormStartTimeStr.Should().Be("08:00");
+        vm.FormEndTimeStr.Should().Be("09:00"); // Mặc định thời lượng 60 phút
+        vm.FormDurationMinutes.Should().Be(60);
+        vm.FormSubTotal.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task ScheduleViewModel_RecalculatePricePreview_WithGoldCustomer_AppliesDiscount()
+    {
+        // Arrange
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService);
+        vm.SelectedDate = DateTime.Today.AddDays(7); // Future weekday or weekend
+        await vm.InitializeAsync();
+
+        await vm.OpenCreateBookingFormAsync();
+        vm.FormStartTimeStr = "08:00";
+        vm.FormEndTimeStr = "10:00"; // 2 hours
+
+        // Act: Chọn Customer 1 (Gold tier, 10% discount)
+        var goldCustomer = (await customerService.SearchCustomersAsync("0911000001")).First();
+        vm.FormSelectedCustomer = goldCustomer;
+        await vm.RecalculatePricePreviewAsync();
+
+        // Assert
+        vm.FormPricingResult.Should().NotBeNull();
+        vm.FormPricingResult!.DiscountPercent.Should().Be(10m);
+        vm.FormDiscountAmount.Should().BeGreaterThan(0);
+        vm.FormFinalAmount.Should().Be(vm.FormSubTotal - vm.FormDiscountAmount);
+        vm.FormPricingNote.Should().Contain("10%");
+    }
+
+    [Fact]
+    public async Task ScheduleViewModel_DoD_StaffCreatesBookingOnSchedule_AppearsOnGridCorrectly()
+    {
+        // DoD: "Staff đặt được trên lịch, thấy khối booking đúng chỗ"
+        // Arrange
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService);
+        vm.SelectedDate = DateTime.Today.AddDays(5);
+        await vm.InitializeAsync();
+
+        // Khung giờ 08:00 - 10:00 trên Sân 1
+        var slot = vm.EmptySlots.First(s => s.CourtId == 1 && s.RowIndex == 4);
+        await vm.OpenCreateBookingFormAsync(slot);
+        vm.FormEndTimeStr = "10:00"; // 08:00 - 10:00
+        vm.FormIsWalkIn = true;
+        vm.FormGuestName = "Trần Khách";
+        vm.FormGuestPhone = "0988776655";
+
+        // Act
+        await vm.ConfirmCreateBookingAsync();
+
+        // Assert
+        dialogService.LastInfoMessage.Should().Contain("Đặt sân thành công");
+        vm.IsBookingFormOpen.Should().BeFalse();
+
+        // Khối booking mới xuất hiện trên lịch đúng toạ độ:
+        var newBookingBlock = vm.Bookings.FirstOrDefault(b => b.CourtId == 1 && b.RowIndex == 4);
+        newBookingBlock.Should().NotBeNull();
+        newBookingBlock!.RowSpan.Should().Be(4); // 2 hours = 4 slots
+        newBookingBlock.TimeRangeText.Should().Be("08:00 - 10:00");
+        newBookingBlock.Status.Should().Be(BookingStatus.CheckedIn); // WalkIn -> CheckedIn
+    }
+
+    [Fact]
+    public async Task ScheduleViewModel_DoD_StaffCreatesOverlappingBooking_BlockedWithVietnameseMessage()
+    {
+        // DoD: "đặt trùng bị chặn với thông báo tiếng Việt"
+        // Arrange
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService);
+        vm.SelectedDate = DateTime.Today.AddDays(5);
+        await vm.InitializeAsync();
+
+        // Tạo đơn 1: 08:00 - 10:00 trên Sân 1
+        var slot = vm.EmptySlots.First(s => s.CourtId == 1 && s.RowIndex == 4);
+        await vm.OpenCreateBookingFormAsync(slot);
+        vm.FormEndTimeStr = "10:00";
+        vm.FormIsWalkIn = true;
+        await vm.ConfirmCreateBookingAsync();
+
+        // Act: Đặt đè lên đơn 1 (08:00 - 10:00) trên cùng Sân 1
+        await vm.OpenCreateBookingFormAsync();
+        vm.FormSelectedCourt = vm.Courts.First(c => c.CourtId == 1);
+        vm.FormStartTimeStr = "08:00";
+        vm.FormEndTimeStr = "10:00";
+        vm.FormIsWalkIn = true;
+        await vm.ConfirmCreateBookingAsync();
+
+        // Assert: Bị chặn với thông báo lỗi tiếng Việt và form vẫn mở
+        dialogService.LastErrorMessage.Should().Contain("Khung giờ này đã có người đặt trên sân đã chọn");
+        vm.IsBookingFormOpen.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ScheduleViewModel_OpenBookingDetails_ShowsBookingInformation()
+    {
+        // Arrange
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        var vm = new ScheduleViewModel(factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService);
+        vm.SelectedDate = DateTime.Today.AddDays(5);
+        await vm.InitializeAsync();
+
+        // Tạo 1 đơn để click
+        var slot = vm.EmptySlots.First(s => s.CourtId == 1 && s.RowIndex == 4);
+        await vm.OpenCreateBookingFormAsync(slot);
+        vm.FormIsWalkIn = true;
+        vm.FormGuestName = "Khách Test";
+        await vm.ConfirmCreateBookingAsync();
+
+        var block = vm.Bookings.First(b => b.CourtId == 1 && b.RowIndex == 4);
+
+        // Act: Click xem chi tiết đơn
+        await vm.OpenBookingDetailsAsync(block);
+
+        // Assert
+        vm.IsDetailsOpen.Should().BeTrue();
+        vm.DetailedBooking.Should().NotBeNull();
+        vm.DetailedBooking!.Code.Should().Be(block.Code);
     }
 
     #endregion
