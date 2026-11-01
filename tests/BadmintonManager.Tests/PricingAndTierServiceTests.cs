@@ -362,4 +362,167 @@ public class PricingAndTierServiceTests
             deleted.Should().BeNull();
         }
     }
+
+    [Fact]
+    public async Task CalculatePrice_SingleSlot_Weekday_CalculatesCorrectly()
+    {
+        // Arrange
+        var (factory, _, pricingService, _) = CreateTestSetup(UserRole.Admin);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        // Monday 08:00 - 10:00 (Weekday rule: 360-960 is 60,000 VND/h)
+        DateTime monday = new DateTime(2026, 11, 2, 8, 0, 0); // Monday
+        DateTime endMonday = new DateTime(2026, 11, 2, 10, 0, 0);
+
+        // Act
+        var result = await pricingService.CalculatePriceAsync(1, monday, endMonday, customerId: null);
+
+        // Assert
+        result.SubTotal.Should().Be(120000m);
+        result.DiscountAmount.Should().Be(0m);
+        result.FinalAmount.Should().Be(120000m);
+        result.DepositAmount.Should().Be(36000m); // 30% of 120,000 = 36,000
+        result.SlotDetails.Should().HaveCount(4); // 4 half-hour slots
+    }
+
+    [Fact]
+    public async Task CalculatePrice_SpanningTwoPriceRules_BR07_CalculatesCorrectly()
+    {
+        // Arrange
+        var (factory, _, pricingService, _) = CreateTestSetup(UserRole.Admin);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        // Monday 15:00 - 17:00 (Crosses 16:00 = 960 min boundary: 60k/h before, 100k/h after)
+        // 15:00 - 16:00: 2 slots * 30k = 60,000
+        // 16:00 - 17:00: 2 slots * 50k = 100,000
+        // Expected SubTotal = 160,000
+        DateTime mondayStart = new DateTime(2026, 11, 2, 15, 0, 0);
+        DateTime mondayEnd = new DateTime(2026, 11, 2, 17, 0, 0);
+
+        // Act
+        var result = await pricingService.CalculatePriceAsync(1, mondayStart, mondayEnd, customerId: null);
+
+        // Assert
+        result.SubTotal.Should().Be(160000m);
+        result.FinalAmount.Should().Be(160000m);
+        result.DepositAmount.Should().Be(48000m); // 30% of 160,000
+        result.SlotDetails.Should().HaveCount(4);
+        result.SlotDetails[0].HourlyRate.Should().Be(60000m);
+        result.SlotDetails[1].HourlyRate.Should().Be(60000m);
+        result.SlotDetails[2].HourlyRate.Should().Be(100000m);
+        result.SlotDetails[3].HourlyRate.Should().Be(100000m);
+    }
+
+    [Fact]
+    public async Task CalculatePrice_Weekend_BR08_UsesWeekendRates()
+    {
+        // Arrange
+        var (factory, _, pricingService, _) = CreateTestSetup(UserRole.Admin);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        // Saturday 08:00 - 10:00 (Weekend rule 360-960 is 80,000 VND/h)
+        DateTime saturdayStart = new DateTime(2026, 11, 7, 8, 0, 0); // Saturday
+        DateTime saturdayEnd = new DateTime(2026, 11, 7, 10, 0, 0);
+
+        // Act
+        var result = await pricingService.CalculatePriceAsync(1, saturdayStart, saturdayEnd, customerId: null);
+
+        // Assert
+        result.SubTotal.Should().Be(160000m); // 2 hours * 80,000
+        result.DepositAmount.Should().Be(48000m);
+        result.SlotDetails.All(s => s.DayType == DayType.Weekend).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CalculatePrice_MembershipTiers_BR09_AppliesCorrectDiscount()
+    {
+        // Arrange
+        var (factory, _, pricingService, _) = CreateTestSetup(UserRole.Admin);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        // customer1 is Gold (10%), customer2 is Silver (5%), customer3 is Bronze (0%)
+        DateTime mondayStart = new DateTime(2026, 11, 2, 8, 0, 0);
+        DateTime mondayEnd = new DateTime(2026, 11, 2, 10, 0, 0); // SubTotal = 120,000
+
+        // Act - Gold
+        var goldResult = await pricingService.CalculatePriceAsync(1, mondayStart, mondayEnd, customerId: 1);
+        // Act - Silver
+        var silverResult = await pricingService.CalculatePriceAsync(1, mondayStart, mondayEnd, customerId: 2);
+        // Act - Bronze
+        var bronzeResult = await pricingService.CalculatePriceAsync(1, mondayStart, mondayEnd, customerId: 3);
+
+        // Assert
+        goldResult.DiscountPercent.Should().Be(10.0m);
+        goldResult.DiscountAmount.Should().Be(12000m);
+        goldResult.FinalAmount.Should().Be(108000m);
+        goldResult.DepositAmount.Should().Be(32000m); // 108,000 * 30% = 32,400 -> rounded to nearest 1,000 = 32,000
+
+        silverResult.DiscountPercent.Should().Be(5.0m);
+        silverResult.DiscountAmount.Should().Be(6000m);
+        silverResult.FinalAmount.Should().Be(114000m);
+        silverResult.DepositAmount.Should().Be(34000m); // 114,000 * 30% = 34,200 -> rounded to nearest 1,000 = 34,000
+
+        bronzeResult.DiscountPercent.Should().Be(0.0m);
+        bronzeResult.DiscountAmount.Should().Be(0m);
+        bronzeResult.FinalAmount.Should().Be(120000m);
+        bronzeResult.DepositAmount.Should().Be(36000m);
+    }
+
+    [Fact]
+    public async Task CalculatePrice_DepositRounding_BR11_RoundsToNearest1000VND()
+    {
+        // Arrange
+        var (factory, _, pricingService, _) = CreateTestSetup(UserRole.Admin);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            // Seed special custom rule with hourly rate 103,333 VND
+            db.PriceRules.Add(new PriceRule
+            {
+                DayType = DayType.Weekday,
+                StartMinute = 360,
+                EndMinute = 1440,
+                PricePerHour = 103333m,
+                IsActive = true
+            });
+            await db.SaveChangesAsync();
+        }
+
+        DateTime mondayStart = new DateTime(2026, 11, 2, 8, 0, 0);
+        DateTime mondayEnd = new DateTime(2026, 11, 2, 9, 0, 0); // 1 hour -> SubTotal = 103,333
+
+        // Act
+        var result = await pricingService.CalculatePriceAsync(1, mondayStart, mondayEnd, customerId: null);
+
+        // Assert
+        // raw deposit = 103,333 * 30% = 30,999.9 -> rounded to nearest 1,000 = 31,000
+        result.DepositAmount.Should().Be(31000m);
+        (result.DepositAmount % 1000m).Should().Be(0m);
+    }
+
+    [Fact]
+    public async Task CalculatePrice_MissingPriceRule_ThrowsBusinessException()
+    {
+        // Arrange: no rules seeded
+        var (factory, _, pricingService, _) = CreateTestSetup(UserRole.Admin);
+
+        DateTime mondayStart = new DateTime(2026, 11, 2, 8, 0, 0);
+        DateTime mondayEnd = new DateTime(2026, 11, 2, 10, 0, 0);
+
+        // Act & Assert
+        var act = async () => await pricingService.CalculatePriceAsync(1, mondayStart, mondayEnd, customerId: null);
+        await act.Should().ThrowAsync<BusinessException>()
+            .WithMessage("*Chưa cấu hình bảng giá cho khung giờ*");
+    }
 }

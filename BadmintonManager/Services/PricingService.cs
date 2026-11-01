@@ -48,6 +48,7 @@ public class PricingService : IPricingService
         await using var db = await _factory.CreateDbContextAsync();
         var rules = await db.PriceRules.AsNoTracking().Where(r => r.IsActive).ToListAsync();
 
+        string tierName = "Vãng lai";
         decimal discountPercent = 0m;
         if (customerId.HasValue)
         {
@@ -56,9 +57,10 @@ public class PricingService : IPricingService
                 .Include(c => c.MembershipTier)
                 .FirstOrDefaultAsync(c => c.Id == customerId.Value);
 
-            if (customer != null)
+            if (customer != null && customer.MembershipTier != null)
             {
                 discountPercent = customer.MembershipTier.DiscountPercent;
+                tierName = customer.MembershipTier.Name;
             }
         }
 
@@ -113,7 +115,79 @@ public class PricingService : IPricingService
             DiscountPercent = discountPercent,
             DiscountAmount = discountAmount,
             FinalAmount = finalAmount,
+            DepositPercent = depositPct,
             DepositAmount = depositAmount,
+            TierName = tierName,
+            TotalMinutes = (int)(endTime - startTime).TotalMinutes,
+            SlotDetails = slotDetails
+        };
+    }
+
+    public async Task<PriceCalculationResult> CalculatePriceDirectAsync(DateTime startTime, DateTime endTime, decimal discountPercent, int? depositPercent = null)
+    {
+        if (endTime <= startTime)
+        {
+            throw new BusinessException("Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
+        }
+
+        await using var db = await _factory.CreateDbContextAsync();
+        var rules = await db.PriceRules.AsNoTracking().Where(r => r.IsActive).ToListAsync();
+
+        decimal subTotal = 0m;
+        var slotDetails = new List<SlotPriceDetail>();
+
+        DateTime current = startTime;
+        while (current < endTime)
+        {
+            DateTime next = current.AddMinutes(30);
+            DayType dayType = (current.DayOfWeek == DayOfWeek.Saturday || current.DayOfWeek == DayOfWeek.Sunday)
+                ? DayType.Weekend
+                : DayType.Weekday;
+
+            int minuteOfDay = current.Hour * 60 + current.Minute;
+
+            var matchingRule = rules.FirstOrDefault(r =>
+                r.DayType == dayType &&
+                minuteOfDay >= r.StartMinute &&
+                minuteOfDay < r.EndMinute);
+
+            if (matchingRule == null)
+            {
+                throw new BusinessException($"Chưa cấu hình bảng giá cho khung giờ {current:HH:mm} ({dayType}). Vui lòng liên hệ Admin.");
+            }
+
+            decimal slotPrice = matchingRule.PricePerHour / 2m;
+            subTotal += slotPrice;
+
+            slotDetails.Add(new SlotPriceDetail(
+                current,
+                next,
+                dayType,
+                matchingRule.PricePerHour,
+                slotPrice
+            ));
+
+            current = next;
+        }
+
+        decimal discountAmount = Math.Round(subTotal * (discountPercent / 100m), 0);
+        decimal finalAmount = subTotal - discountAmount;
+
+        int depositPct = depositPercent ?? await _settingService.GetIntSettingAsync(Constants.Settings.DepositPercent, 30);
+        decimal rawDeposit = finalAmount * (depositPct / 100m);
+        // Round to nearest 1,000 VND (BR-11)
+        decimal depositAmount = Math.Round(rawDeposit / 1000m, MidpointRounding.AwayFromZero) * 1000m;
+
+        return new PriceCalculationResult
+        {
+            SubTotal = subTotal,
+            DiscountPercent = discountPercent,
+            DiscountAmount = discountAmount,
+            FinalAmount = finalAmount,
+            DepositPercent = depositPct,
+            DepositAmount = depositAmount,
+            TierName = string.Empty,
+            TotalMinutes = (int)(endTime - startTime).TotalMinutes,
             SlotDetails = slotDetails
         };
     }

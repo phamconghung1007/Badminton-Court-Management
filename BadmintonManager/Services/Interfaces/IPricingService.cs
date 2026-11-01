@@ -10,6 +10,7 @@ namespace BadmintonManager.Services.Interfaces;
 public interface IPricingService
 {
     Task<PriceCalculationResult> CalculatePriceAsync(int courtId, DateTime startTime, DateTime endTime, int? customerId);
+    Task<PriceCalculationResult> CalculatePriceDirectAsync(DateTime startTime, DateTime endTime, decimal discountPercent, int? depositPercent = null);
     Task<List<PriceRule>> GetPriceRulesAsync();
     Task UpdatePriceRuleAsync(PriceRule rule);
     Task ValidatePriceRulesCoverageAsync();

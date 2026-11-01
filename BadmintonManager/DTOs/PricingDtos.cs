@@ -10,7 +10,10 @@ public record PriceCalculationResult
     public decimal DiscountPercent { get; init; }
     public decimal DiscountAmount { get; init; }
     public decimal FinalAmount { get; init; }
+    public int DepositPercent { get; init; } = 30;
     public decimal DepositAmount { get; init; }
+    public string TierName { get; init; } = string.Empty;
+    public int TotalMinutes { get; init; }
     public List<SlotPriceDetail> SlotDetails { get; init; } = new();
 }
 
