@@ -8,7 +8,7 @@
 - **Cơ sở dữ liệu**: Microsoft SQL Server
 - **Bảo mật**: `BCrypt.Net-Next` (Băm mật khẩu)
 - **Kiến trúc & DI**: `Microsoft.Extensions.Hosting` (Generic Host, Dependency Injection, `IDbContextFactory<AppDbContext>`)
-- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (126 unit tests 100% passed)
+- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (136 unit tests 100% passed)
 
 ---
 
@@ -133,6 +133,29 @@
   - *"Staff đặt được trên lịch, thấy khối booking đúng chỗ; đặt trùng bị chặn với thông báo tiếng Việt"*.
   - Toàn bộ **126/126 unit tests tự động vượt qua (100% Passed)** với 20 bài test mới bao phủ `ScheduleMatrixHelper`, `ScheduleViewModel` (DoD workflow, overlap blocking, live pricing preview), `BookingListViewModel` và điều hướng Shell.
 
+### ✅ Ngày 6: Quy trình Booking đầy đủ, Check-in, Thanh toán, Hóa đơn & Nâng hạng hội viên
+- [x] **Dịch vụ Thanh toán & Phân loại giao dịch (PaymentService - BR-11, BR-12, BR-13, BR-14)**:
+  - Hỗ trợ thanh toán đa phương thức: Tiền mặt (`Cash`) và Chuyển khoản (`BankTransfer`).
+  - Thu cọc tối thiểu 30% làm tròn theo bội số 1.000 VNĐ (BR-11), tự động cập nhật trạng thái đơn từ `Pending` sang `Confirmed`.
+  - Thu nốt phần tiền còn thiếu khi khách trả sân, tự động chuyển đơn sang `Completed` khi thanh toán đủ (BR-13).
+  - Tự động tạo bản ghi hoàn cọc (`Refund`) khi hủy đơn trước giờ chơi $\ge 24$ giờ (BR-14).
+  - Bảo mật chi nhánh: Kiểm tra quyền hạn cơ sở tại tầng Service, ném `ForbiddenException` nếu thanh toán trái cơ sở.
+- [x] **Tích điểm hội viên & Tự động nâng hạng thẻ (BR-15, BR-16)**:
+  - Tích điểm tức thì khi hoàn tất đơn: $\lfloor \text{FinalAmount} / 10.000 \rfloor$ điểm.
+  - Ghi vết biến động điểm minh bạch vào bảng `PointTransaction`.
+  - Tự động so sánh điểm tích lũy và nâng hạng thẻ hội viên (Đồng $\to$ Bạc $\to$ Vàng...) ngay trong Transaction.
+- [x] **Hệ thống In & Xem trước Hóa đơn (FlowDocument + PrintDialog - InvoiceService & InvoicePrinter)**:
+  - Sinh mã hóa đơn chuẩn hóa `INV-yyyyMMdd-seq`.
+  - Mẫu hóa đơn `FlowDocument` chuyên nghiệp với đầy đủ thông tin cơ sở, khách hàng, chi tiết giờ chơi, đơn giá, chiết khấu hạng thẻ, tiền cọc và dư nợ.
+  - Hộp thoại xem trước `InvoicePreviewDialog` tích hợp `FlowDocumentScrollViewer` và nút in trực tiếp ra máy in hóa đơn.
+- [x] **Tích hợp UI Check-out & Điều chỉnh Booking**:
+  - Hộp thoại `PaymentDialog`: Thu cọc hoặc thu nốt, kiểm soát số tiền, tùy chọn tự động mở in hóa đơn.
+  - Hộp thoại `EditBookingDialog`: Đổi sân, đổi giờ linh hoạt kèm tính lại giá tự động.
+  - Tích hợp trọn vẹn nút hành động Thu tiền, In hóa đơn, Điều chỉnh giờ trên cả `SchedulePage` và `BookingListPage`.
+- [x] **Đạt tiêu chí nghiệm thu Ngày 6 (DoD Ngày 6)**:
+  - *"Chạy trọn vòng đời 1 booking từ Pending đến Completed; hóa đơn in/preview ra đúng số"*.
+  - Toàn bộ **136/136 unit tests tự động vượt qua (100% Passed)** với các bài test trọn vòng đời `BookingLifecycleTests`, `PaymentAndMembershipTests` và `InvoiceTests`.
+
 ---
 
 ## 🏗 Cấu trúc dự án
@@ -185,7 +208,7 @@ BadmintonCourtManagement/
 │   ├── Converters/                    # BoolToVisibility, MoneyConverter, StatusToBrushConverter
 │   └── Resources/                     # Colors.xaml, Styles.xaml
 └── tests/
-    └── BadmintonManager.Tests/        # 126 bài kiểm thử tự động xUnit (DoD Ngày 1, 2, 3, 4, 5 100% Passed)
+    └── BadmintonManager.Tests/        # 136 bài kiểm thử tự động xUnit (DoD Ngày 1, 2, 3, 4, 5, 6 100% Passed)
 ```
 
 ---
@@ -218,7 +241,7 @@ Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư m
 }
 ```
 
-### 2. Chạy toàn bộ 106 bài kiểm thử tự động (Unit Tests)
+### 2. Chạy toàn bộ 136 bài kiểm thử tự động (Unit Tests)
 ```powershell
 dotnet test
 ```
@@ -229,16 +252,17 @@ Mở solution `BadmintonCourtManagement.sln` trong Visual Studio 2022 và nhấn
 dotnet run --project BadmintonManager/BadmintonManager.csproj
 ```
 Khi ứng dụng mở:
+- **Kiểm thử DoD Ngày 6 (Full Lifecycle & In Hóa Đơn)**:
+  - Đăng nhập tài khoản Staff: `staff1_1` / `123456`.
+  - Mở menu **"Lịch sân chi nhánh"** hoặc **"Danh sách đặt sân"**.
+  - Bấm vào đơn đặt sân ở trạng thái Chờ duyệt (`Pending`) -> Chọn **Thu cọc**: Chọn tiền mặt hoặc chuyển khoản, đơn chuyển ngay sang Đã duyệt (`Confirmed`).
+  - Khi khách đến nhận sân: Bấm nút **Check-in**, đơn chuyển sang trạng thái Đang chơi (`CheckedIn`).
+  - Khi khách trả sân: Bấm nút **Thu tiền** -> Thu nốt số tiền còn lại -> Đơn tự động chuyển sang Hoàn tất (`Completed`), hệ thống tự động tích điểm và nâng hạng hội viên nếu đủ điều kiện.
+  - Chọn **Xem & In hóa đơn**: Cửa sổ `InvoicePreviewDialog` mở bản in `FlowDocument` sắc nét với đầy đủ thông tin cơ sở, khách hàng, số tiền, chiết khấu và dư nợ; hỗ trợ in trực tiếp ra máy in hóa đơn.
+- **Kiểm thử DoD Ngày 5 (Schedule Grid & Live Booking)**:
+  - Xem ma trận 36 khung thời gian (06:00 - 24:00) chia theo 6 sân. Click ô trống bất kỳ để mở Drawer đặt sân; tự động tính giá và chiết khấu theo hạng thẻ hội viên; đặt trùng giờ sẽ bị chặn ngay lập tức.
 - **Kiểm thử DoD Ngày 4 (Pricing & Booking Rules)**:
   - Tất cả các trường hợp nghiệp vụ: **Trùng giờ (BR-03)**, **Khoảng trống 30 phút (BR-04)**, **Vắt qua 2 khung giá (BR-07)**, **Cuối tuần (BR-08)**, **Giảm hạng hội viên (BR-09)**, **Làm tròn tiền cọc (BR-11)**, **Khung giờ :00/:30 (BR-01)**, **Thời lượng 60-240p (BR-02)**, **Chống quá khứ (BR-05)** đều được kiểm thử tự động bằng 40 bài xUnit test trong `BookingServiceTests.cs` và `PricingAndTierServiceTests.cs`.
-- **Kiểm thử DoD Ngày 3 cho Admin**:
-  - Đăng nhập `admin` / `123456`.
-  - Mở menu **"Quản lý cơ sở"**: Thêm/sửa cơ sở chi nhánh mới.
-  - Mở menu **"Quản lý sân"**: Xem sân của mọi chi nhánh qua bộ lọc ComboBox; thêm sân mới cho bất kỳ cơ sở nào.
-  - Mở menu **"Tài khoản người dùng"**: Tạo tài khoản Manager/Staff (bắt buộc chọn cơ sở) hoặc Admin (`BranchId = null`).
-  - Mở menu **"Bảng giá & Khung giờ"**: Xem trạng thái phủ kín BR-10 của Ngày thường và Cuối tuần; thêm/sửa khung giá (hệ thống tự động phát hiện và chặn nếu bị trùng lấn khung giờ).
-  - Mở menu **"Hạng hội viên"**: Cấu hình ngưỡng điểm nâng hạng và % giảm giá trực tiếp cho Đồng, Bạc, Vàng.
-- **Kiểm thử DoD Ngày 3 cho Manager**:
-  - Đăng nhập `manager1` / `123456`.
-  - Mở menu **"Sân cơ sở"**: Chỉ hiển thị 6 sân của Cơ sở Cầu Giấy; form thêm sân bị khoá cứng theo Cơ sở Cầu Giấy.
-  - Mở menu **"Nhân viên cơ sở"**: Chỉ hiển thị và quản lý nhân viên của Cơ sở Cầu Giấy; chỉ có quyền tạo tài khoản Staff thuộc cơ sở này.
+- **Kiểm thử DoD Ngày 3 cho Admin & Manager**:
+  - Đăng nhập `admin` / `123456` để quản lý chi nhánh, quản lý sân toàn bộ cơ sở, phân quyền tài khoản, cấu hình bảng giá phủ kín BR-10 và chính sách hạng hội viên.
+  - Đăng nhập `manager1` / `123456` để kiểm tra phân quyền scoped: chỉ xem và thao tác với sân và nhân sự thuộc Cơ sở Cầu Giấy.
