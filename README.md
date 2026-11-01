@@ -8,7 +8,7 @@
 - **Cơ sở dữ liệu**: Microsoft SQL Server
 - **Bảo mật**: `BCrypt.Net-Next` (Băm mật khẩu)
 - **Kiến trúc & DI**: `Microsoft.Extensions.Hosting` (Generic Host, Dependency Injection, `IDbContextFactory<AppDbContext>`)
-- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (66 unit tests 100% passed)
+- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (106 unit tests 100% passed)
 
 ---
 
@@ -80,6 +80,27 @@
   - Admin thêm sân/đổi giá được; Manager chỉ thấy cơ sở mình.
   - Toàn bộ **66/66 unit tests tự động vượt qua (100% Passed)**, bao gồm 40 bài test mới cho CRUD Chi nhánh, Sân, Tài khoản, Phân quyền chi nhánh và Validate BR-10.
 
+### ✅ Ngày 4: Pricing Engine, Booking Service, Toàn bộ Validation BR-01..06, 09, 11 & Unit Test Suite
+- [x] **Thuật toán tính giá theo ô 30 phút & Chiết khấu đa tầng (BR-07, BR-08, BR-09, BR-11 - PricingService)**:
+  - Tách khoảng thời gian đặt sân thành các block 30 phút riêng biệt (`_pricingService.CalculatePriceAsync`).
+  - Tự động nhận diện thứ 7 / Chủ nhật để áp giá Cuối tuần (`DayType.Weekend`) theo chuẩn **BR-08**.
+  - Ánh xạ chính xác bảng giá của từng ô 30 phút theo ma trận `PriceRule` tương ứng (**BR-07**: tính toán hoàn hảo khi đặt vắt qua 2 hoặc nhiều khung giá khác nhau).
+  - Tra cứu hạng thẻ khách hàng (Đồng, Bạc, Vàng...) và tự động áp dụng % chiết khấu hội viên (**BR-09**: giảm trực tiếp trên tổng tiền giờ trước cọc).
+  - Tính tiền đặt cọc theo tỷ lệ cấu hình hệ thống (`DepositPercent`, mặc định 30%) và tự động làm tròn lên bội số 1.000 VNĐ gần nhất (**BR-11**: `Math.Ceiling(amount / 1000m) * 1000m`).
+- [x] **Nghiệp vụ Đặt sân toàn diện & Chống trùng lịch (BR-01..06, A7 - BookingService)**:
+  - **BR-01 (Khung giờ & Mốc :00/:30)**: Giờ hoạt động 06:00 - 24:00 (chuẩn hóa mốc 24:00 tức 00:00 ngày tiếp theo), bắt buộc mốc bắt đầu và kết thúc tại phút :00 hoặc :30, giây = 0.
+  - **BR-02 (Thời lượng)**: Đọc động cấu hình `MinDurationMinutes` (60) và `MaxDurationMinutes` (240) từ `ISettingService`, từ chối nếu thời lượng < 60 phút hoặc > 4 giờ (240 phút).
+  - **BR-03 (Chống trùng lịch / Overlap)**: Phát hiện và chặn tức thời mọi dạng xung đột lịch trên cùng sân (`StartTime < existing.EndTime && existing.StartTime < EndTime`). Tự động bỏ qua các đơn ở trạng thái `Cancelled`.
+  - **BR-04 (Quy tắc khoảng trống 30 phút - A4)**: Kiểm tra khoảng trống với lịch đặt liền trước (hoặc mốc mở cửa 06:00) và liền sau (hoặc mốc đóng cửa 24:00) trên cùng sân trong ngày. Nếu để hở đúng 30 phút, từ chối với thông báo hướng dẫn cụ thể: `"Quy tắc khoảng trống: Không được để lại khoảng trống đúng 30 phút giữa các lịch đặt (Hãy đặt sát giờ hoặc chừa từ 1 giờ trở lên)."`.
+  - **BR-05 (Chống đặt trong quá khứ & Walk-in)**: Chặn đặt lùi thời gian cho đơn đặt trước. Cho phép khách vãng lai (Walk-in) đặt bắt đầu từ khung 30 phút hiện tại.
+  - **BR-06 & Quản lý giao dịch an toàn (Concurrency & Isolation)**: Giao dịch an toàn hỗ trợ `IsolationLevel.Serializable` trên relational database, tự động fallback `NoOpTransaction` trên InMemory test runner; xử lý bắt lỗi `DbUpdateConcurrencyException`.
+  - **A7 (Trạng thái ban đầu & Sinh mã)**: Khách hàng tự đặt trực tuyến: `Pending`; Nhân viên tạo: `Confirmed`; Khách vãng lai: `CheckedIn`. Sinh mã đơn chuẩn hóa `BK{yyyyMMdd}-{seq:D3}` duy nhất.
+  - **Phân quyền cơ sở**: Quản lý / Nhân viên chỉ có thể tạo hoặc sửa đơn đặt trên sân thuộc chi nhánh của mình; Khách hàng tự động gán theo hồ sơ cá nhân.
+  - **BR-14 (Hủy lịch & Hoàn cọc)**: Hủy trước giờ chơi $\ge 24$ giờ: tự động tạo phiếu hoàn cọc (`PaymentType.Refund`); Hủy dưới 24 giờ: hủy đơn và mất cọc theo quy định.
+- [x] **Đạt tiêu chí nghiệm thu Ngày 4 (DoD Ngày 4)**:
+  - Toàn bộ các test: **trùng giờ**, **khoảng trống 30 phút**, **vắt qua 2 khung giá**, **cuối tuần**, **giảm hạng hội viên**, **làm tròn cọc** đều xanh.
+  - Toàn bộ **106/106 unit tests tự động vượt qua (100% Passed)** với 40 bài test mới bổ sung cho Day 4.
+
 ---
 
 ## 🏗 Cấu trúc dự án
@@ -132,7 +153,7 @@ BadmintonCourtManagement/
 │   ├── Converters/                    # BoolToVisibility, MoneyConverter, StatusToBrushConverter
 │   └── Resources/                     # Colors.xaml, Styles.xaml
 └── tests/
-    └── BadmintonManager.Tests/        # 66 bài kiểm thử tự động xUnit (DoD Ngày 1, Ngày 2, Ngày 3 100% Passed)
+    └── BadmintonManager.Tests/        # 106 bài kiểm thử tự động xUnit (DoD Ngày 1, 2, 3, 4 100% Passed)
 ```
 
 ---
@@ -165,7 +186,7 @@ Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư m
 }
 ```
 
-### 2. Chạy toàn bộ 66 bài kiểm thử tự động (Unit Tests)
+### 2. Chạy toàn bộ 106 bài kiểm thử tự động (Unit Tests)
 ```powershell
 dotnet test
 ```
@@ -176,6 +197,8 @@ Mở solution `BadmintonCourtManagement.sln` trong Visual Studio 2022 và nhấn
 dotnet run --project BadmintonManager/BadmintonManager.csproj
 ```
 Khi ứng dụng mở:
+- **Kiểm thử DoD Ngày 4 (Pricing & Booking Rules)**:
+  - Tất cả các trường hợp nghiệp vụ: **Trùng giờ (BR-03)**, **Khoảng trống 30 phút (BR-04)**, **Vắt qua 2 khung giá (BR-07)**, **Cuối tuần (BR-08)**, **Giảm hạng hội viên (BR-09)**, **Làm tròn tiền cọc (BR-11)**, **Khung giờ :00/:30 (BR-01)**, **Thời lượng 60-240p (BR-02)**, **Chống quá khứ (BR-05)** đều được kiểm thử tự động bằng 40 bài xUnit test trong `BookingServiceTests.cs` và `PricingAndTierServiceTests.cs`.
 - **Kiểm thử DoD Ngày 3 cho Admin**:
   - Đăng nhập `admin` / `123456`.
   - Mở menu **"Quản lý cơ sở"**: Thêm/sửa cơ sở chi nhánh mới.
