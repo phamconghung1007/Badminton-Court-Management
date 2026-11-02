@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="900"
+             d:DesignHeight="850" d:DesignWidth="1100"
              Loaded="UserControl_Loaded">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -13,69 +13,220 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,24">
-                <TextBlock Text="Cổng thông tin Khách hàng (Customer Portal)"
-                           FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                    <TextBlock Text="Xin chào: " FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
-                    <TextBlock Text="{Binding CustomerName}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                    <TextBlock Text=" | Hạng: " FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0"/>
-                    <Border Background="{StaticResource RoleCustomerBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding TierName}" FontSize="11" FontWeight="Bold" Foreground="White"/>
-                    </Border>
-                    <TextBlock Text="{Binding DiscountPercent, StringFormat=' (Ưu đãi {0:0.#}%)'}" FontSize="12" Foreground="{StaticResource RoleCustomerBrush}" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                </StackPanel>
-            </StackPanel>
+            <!-- 1. Header & Greeting -->
+            <Grid Grid.Row="0" Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Stat Cards Row -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Cổng Thông Tin Hội Viên (Customer Portal)"
+                               FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <TextBlock Text="Xin chào: " FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding CustomerName}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock Text=" | Hạng thẻ hiện tại: " FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0"/>
+                        <Border Background="{StaticResource RoleCustomerBrush}" CornerRadius="10" Padding="10,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TierName}" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                        </Border>
+                        <TextBlock Text="{Binding DiscountPercent, StringFormat=' (Ưu đãi giảm {0:0.#}%)'}" FontSize="13" Foreground="{StaticResource RoleCustomerBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Quick Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding NavigateToBookCourtCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Height="40" Padding="16,0" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CalendarSearch" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Tìm &amp; Đặt Sân Ngay" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding NavigateToBookingHistoryCommand}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Height="40" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="History" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Lịch Sử Đơn" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- 2. KPI Stat Cards -->
             <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,24">
                 <!-- Loyalty Points -->
-                <Border Style="{StaticResource StatCardBorderStyle}" Margin="0,0,12,0">
-                    <StackPanel>
-                        <materialDesign:PackIcon Kind="StarCircle" Width="28" Height="28" Foreground="{StaticResource WarningBrush}" Margin="0,0,0,8"/>
-                        <TextBlock Text="Điểm tích lũy hiện có" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
-                        <TextBlock Text="{Binding TotalPoints, StringFormat='{}{0} điểm'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource WarningBrush}"/>
-                    </StackPanel>
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="0,0,12,0" Padding="16">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Điểm tích lũy hiện có" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalPoints, StringFormat='{}{0:N0} điểm'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource WarningBrush}" Margin="0,4,0,0"/>
+                            <TextBlock Text="10.000đ = 1 điểm tích lũy" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Kind="StarCircle" Width="36" Height="36" Foreground="{StaticResource WarningBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                    </Grid>
                 </Border>
 
                 <!-- Active Bookings -->
-                <Border Style="{StaticResource StatCardBorderStyle}" Margin="6,0,6,0">
-                    <StackPanel>
-                        <materialDesign:PackIcon Kind="CalendarClock" Width="28" Height="28" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,8"/>
-                        <TextBlock Text="Lịch đặt sắp diễn ra" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
-                        <TextBlock Text="{Binding ActiveBookingsCount, StringFormat='{}{0} lượt'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                    </StackPanel>
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="6,0,6,0" Padding="16">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Lịch đặt sắp diễn ra" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding ActiveBookingsCount, StringFormat='{}{0} đơn'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,4,0,0"/>
+                            <TextBlock Text="Chờ duyệt hoặc đã xác nhận" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Kind="CalendarClock" Width="36" Height="36" Foreground="{StaticResource PrimaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                    </Grid>
                 </Border>
 
                 <!-- Completed Bookings -->
-                <Border Style="{StaticResource StatCardBorderStyle}" Margin="12,0,0,0">
-                    <StackPanel>
-                        <materialDesign:PackIcon Kind="CheckDecagram" Width="28" Height="28" Foreground="{StaticResource RoleCustomerBrush}" Margin="0,0,0,8"/>
-                        <TextBlock Text="Lượt chơi đã hoàn thành" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
-                        <TextBlock Text="{Binding CompletedBookingsCount, StringFormat='{}{0} lượt'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                    </StackPanel>
+                <Border Style="{StaticResource StatCardBorderStyle}" Margin="12,0,0,0" Padding="16">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Buổi chơi đã hoàn tất" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding CompletedBookingsCount, StringFormat='{}{0} buổi'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" Margin="0,4,0,0"/>
+                            <TextBlock Text="Đã thanh toán &amp; tích điểm" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Kind="CheckDecagram" Width="36" Height="36" Foreground="{StaticResource SuccessBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                    </Grid>
                 </Border>
             </UniformGrid>
 
-            <!-- Info Box -->
-            <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}">
-                <StackPanel>
-                    <TextBlock Text="🏸 Dịch vụ &amp; Quyền lợi thành viên"
-                               FontWeight="Bold" FontSize="15" Margin="0,0,0,12"/>
-                    <TextBlock Text="• Tra cứu nhanh tình trạng sân trống tại 3 cơ sở (Cầu Giấy, Đống Đa, Thanh Xuân)."
-                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                    <TextBlock Text="• Đặt sân trực tuyến theo giờ linh hoạt, thanh toán tiện lợi qua mã VietQR."
-                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                    <TextBlock Text="• Quản lý lịch sử đặt sân cá nhân và huỷ lịch theo chính sách hoàn huỷ quy định."
-                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
-                    <TextBlock Text="• Tích điểm nâng hạng hội viên (Đồng 0%, Bạc 5%, Vàng 10%) để nhận giảm giá tự động khi đặt sân."
-                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
-                </StackPanel>
+            <!-- 3. Membership Progress Banner -->
+            <Border Grid.Row="2" Style="{StaticResource SurfaceCardBorderStyle}" Margin="0,0,0,24" Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ShieldStar" Width="22" Height="22" Foreground="{StaticResource RoleCustomerBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Tiến độ thăng hạng hội viên" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock HorizontalAlignment="Right" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center">
+                            <Run Text="Mục tiêu: "/>
+                            <Run Text="{Binding NextTierName}" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}"/>
+                        </TextBlock>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                        <ProgressBar Value="{Binding TierProgressPercent}" Height="10" Foreground="{StaticResource RoleCustomerBrush}" Background="#E2E8F0" Margin="0,0,0,8"/>
+                        <Grid>
+                            <TextBlock Text="{Binding TierProgressSummary}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <Button HorizontalAlignment="Right"
+                                    Command="{Binding NavigateToPointsCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Height="24" Padding="4,0" FontSize="12" Foreground="{StaticResource PrimaryBrush}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Xem chi tiết điểm &amp; chính sách hạng"/>
+                                    <materialDesign:PackIcon Kind="ChevronRight" Width="14" Height="14" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
             </Border>
+
+            <!-- 4. Upcoming Bookings & Instructions -->
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Upcoming Bookings -->
+                <Border Grid.Column="0" Style="{StaticResource SurfaceCardBorderStyle}" Margin="0,0,20,0" Padding="20">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,16">
+                            <TextBlock Text="Lịch đặt sân sắp tới của bạn" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <Button HorizontalAlignment="Right" Command="{Binding NavigateToBookingHistoryCommand}"
+                                    Style="{StaticResource MaterialDesignFlatButton}" Height="28" Padding="6,0" FontSize="12">
+                                <TextBlock Text="Xem tất cả đơn"/>
+                            </Button>
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{Binding UpcomingBookings}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,10" Padding="12" CornerRadius="6" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Code}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource PrimaryBrush}"/>
+                                                    <Border Background="#FEF3C7" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="Bold" Foreground="#92400E"/>
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0">
+                                                    <Run Text="{Binding CourtName}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                    <Run Text=" - "/>
+                                                    <Run Text="{Binding BranchName}"/>
+                                                </TextBlock>
+                                                <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0">
+                                                    <Run Text="Thời gian: "/>
+                                                    <Run Text="{Binding StartTime, StringFormat='{}{0:HH:mm}'}"/>
+                                                    <Run Text=" - "/>
+                                                    <Run Text="{Binding EndTime, StringFormat='{}{0:HH:mm}'}"/>
+                                                    <Run Text=" (Ngày "/>
+                                                    <Run Text="{Binding StartTime, StringFormat='{}{0:dd/MM/yyyy}'}"/>
+                                                    <Run Text=")"/>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding FinalAmount, StringFormat='{}{0:N0} VNĐ'}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right"/>
+                                                <TextBlock Text="{Binding DepositAmount, StringFormat='Cọc: {0:N0} VNĐ'}" FontSize="11" Foreground="{StaticResource WarningBrush}" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Right: Rules & Contact Support -->
+                <Border Grid.Column="1" Style="{StaticResource SurfaceCardBorderStyle}" Padding="20" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="Quy định &amp; Lưu ý khi đặt sân" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
+
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock Text="1. Thời gian giữ chỗ trực tuyến:" FontWeight="Bold" FontSize="12" Foreground="{StaticResource PrimaryBrush}"/>
+                            <TextBlock Text="Đơn đặt trực tuyến có trạng thái Chờ duyệt (Pending) sẽ được giữ trong vòng 2 giờ. Quý khách vui lòng chuyển khoản đặt cọc tối thiểu 30% để nhân viên duyệt đơn." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock Text="2. Chính sách hoàn cọc (BR-14 / A9):" FontWeight="Bold" FontSize="12" Foreground="{StaticResource PrimaryBrush}"/>
+                            <TextBlock Text="• Hủy trước giờ chơi từ 24 giờ trở lên: Hoàn 100% tiền cọc qua tài khoản ngân hàng.&#x0a;• Hủy dưới 24 giờ hoặc vắng mặt: Mất cọc theo quy định hệ thống." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,16">
+                            <TextBlock Text="3. Đổi lịch chơi:" FontWeight="Bold" FontSize="12" Foreground="{StaticResource PrimaryBrush}"/>
+                            <TextBlock Text="Quý khách có thể đổi giờ chơi hoặc đổi sân miễn phí trước giờ chơi ít nhất 24 giờ." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <Border Background="#EFF6FF" CornerRadius="6" Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="📞 Hotline hỗ trợ khách hàng" FontWeight="Bold" FontSize="12" Foreground="#1E40AF"/>
+                                <TextBlock Text="Cần hỗ trợ gấp về cọc hoặc check-in? Liên hệ hotline cơ sở hoặc tổng đài: 1900 6868" FontSize="11" Foreground="#3B82F6" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
     </ScrollViewer>
 </UserControl>

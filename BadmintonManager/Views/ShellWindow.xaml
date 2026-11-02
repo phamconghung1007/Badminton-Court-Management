@@ -35,6 +35,12 @@
         <DataTemplate DataType="{x:Type custVm:CustomerBookCourtViewModel}">
             <pages:CustomerBookCourtPage />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type custVm:CustomerBookingsViewModel}">
+            <pages:CustomerBookingsPage />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type custVm:CustomerPointsViewModel}">
+            <pages:CustomerPointsPage />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type adminVm:AdminBranchesViewModel}">
             <pages:AdminBranchesPage />
         </DataTemplate>

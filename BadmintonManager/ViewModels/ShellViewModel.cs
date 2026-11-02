@@ -164,17 +164,14 @@ public partial class ShellViewModel : ViewModelBase
 
             "AdminPricing" => _serviceProvider.GetRequiredService<AdminPricingViewModel>(),
             "AdminTiers" => _serviceProvider.GetRequiredService<AdminTiersViewModel>(),
-            "CustomerPoints" => new PlaceholderPageViewModel(
-                "Hạng hội viên & Điểm thưởng",
-                "Chính sách phân hạng hội viên (Đồng, Bạc, Vàng), tỷ lệ tích điểm và chiết khấu giảm giá trực tiếp theo quy định Section 3.3.",
-                "Ngày 4 - Cấu hình Bảng giá & Hạng hội viên",
-                "CardAccountDetailsStar"),
+            "CustomerPoints" => _serviceProvider.GetRequiredService<CustomerPointsViewModel>(),
 
             "Customers" => _serviceProvider.GetRequiredService<CustomerListViewModel>(),
 
             "ScheduleGrid" => _serviceProvider.GetRequiredService<ScheduleViewModel>(),
 
             "CustomerBookCourt" => _serviceProvider.GetRequiredService<CustomerBookCourtViewModel>(),
+            "CustomerBookingHistory" => _serviceProvider.GetRequiredService<CustomerBookingsViewModel>(),
 
             "CreateBooking" => new PlaceholderPageViewModel(
                 "Đặt sân & Check-in",
@@ -182,7 +179,7 @@ public partial class ShellViewModel : ViewModelBase
                 "Ngày 6 - Quy trình Đặt sân & Check-in",
                 "CalendarPlus"),
 
-            "BookingList" or "CustomerBookingHistory" => _serviceProvider.GetRequiredService<BookingListViewModel>(),
+            "BookingList" => _serviceProvider.GetRequiredService<BookingListViewModel>(),
 
             "AdminReports" or "ManagerReports" => new PlaceholderPageViewModel(
                 "Báo cáo & Thống kê doanh thu",

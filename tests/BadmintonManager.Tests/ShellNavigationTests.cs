@@ -62,6 +62,9 @@ public class ShellNavigationTests
         services.AddTransient<ManagerDashboardViewModel>();
         services.AddTransient<StaffDashboardViewModel>();
         services.AddTransient<CustomerDashboardViewModel>();
+        services.AddTransient<CustomerBookCourtViewModel>();
+        services.AddTransient<CustomerBookingsViewModel>();
+        services.AddTransient<CustomerPointsViewModel>();
         services.AddTransient<UserProfileViewModel>();
         services.AddTransient<ScheduleViewModel>();
         services.AddTransient<BookingListViewModel>();
