@@ -8,7 +8,7 @@
 - **Cơ sở dữ liệu**: Microsoft SQL Server
 - **Bảo mật**: `BCrypt.Net-Next` (Băm mật khẩu)
 - **Kiến trúc & DI**: `Microsoft.Extensions.Hosting` (Generic Host, Dependency Injection, `IDbContextFactory<AppDbContext>`)
-- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (173 unit tests 100% passed)
+- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (191 unit tests 100% passed)
 
 ---
 
@@ -204,6 +204,28 @@
   - *"Customer chỉ thấy dữ liệu của mình (thử truy cập chéo bị chặn ở Service)"*.
   - Toàn bộ **173/173 unit tests tự động vượt qua (100% Passed)** với 17 bài test mới bao phủ `CustomerAccessSecurityTests` (8 tests), `CustomerBookCourtViewModelTests` (5 tests), `CustomerBookingsViewModelTests` (3 tests), và `CustomerPointsViewModelTests` (1 test).
 
+### ✅ Ngày 9: Báo cáo & Thống kê doanh thu, Biểu đồ LiveCharts2, So sánh 3 cơ sở & Phân quyền
+- [x] **Dịch vụ Báo cáo & Phân quyền Scoping dữ liệu (ReportService - Section 2, 4, 13 & Quyết định 4)**:
+  - **Quản trị viên (`Admin`)**: Xem doanh thu toàn hệ thống, lọc từng cơ sở, độc quyền xem so sánh cạnh nhau 3 chi nhánh (`GetBranchRevenueComparisonAsync`, `GetBranchOccupancyComparisonAsync`).
+  - **Quản lý (`Manager`)**: Bị khóa cứng theo `BranchId` trực thuộc (`_currentUser.BranchId`). Nếu cố tình truyền `BranchId` khác hoặc gọi hàm so sánh cơ sở của Admin, Service ném ngay `ForbiddenException`.
+  - **Nhân viên (`Staff`) & Khách hàng (`Customer`)**: Bị chặn hoàn toàn quyền truy cập báo cáo tại Service với `UnauthorizedAccessException`.
+  - **Thuật toán tỷ lệ lấp đầy sân (Occupancy Rate)**: $\frac{\sum \text{Phút đã đặt}}{\text{Số sân} \times \text{Số ngày} \times 18 \times 60} \times 100\%$ (giờ mở cửa `06:00 - 24:00` theo A1, BR-01).
+  - **Thuật toán Top khách hàng**: Gom nhóm các đơn `Completed`, tính tổng lượt đặt và tổng chi tiêu thực tế.
+- [x] **Báo cáo Toàn hệ thống cho Admin (`AdminReportsPage` & `AdminReportsViewModel`)**:
+  - Tích hợp biểu đồ trực quan **LiveCharts2** (`LiveChartsCore.SkiaSharpView.WPF`): biểu đồ cột doanh thu ngày (`RevenueSeries`), biểu đồ so sánh cạnh nhau 3 chi nhánh (`BranchComparisonSeries`), và biểu đồ tỷ lệ lấp đầy top sân (`OccupancySeries`).
+  - Bộ lọc: Từ ngày, Đến ngày, các nút chọn nhanh (Hôm nay, Tuần này, Tháng này, 30 ngày qua), cùng bộ chọn Cơ sở linh hoạt.
+  - 4 thẻ KPI tổng quan: Doanh thu toàn hệ thống, Tổng lượt booking, Tổng số giờ chơi, Tỷ lệ lấp đầy bình quân.
+  - 4 Tab dữ liệu chuyên sâu: Doanh thu theo ngày, So sánh 3 cơ sở, Tỷ lệ lấp đầy sân, Top khách hàng thân thiết.
+- [x] **Báo cáo Doanh thu & Hiệu suất Cơ sở cho Manager (`ManagerReportsPage` & `ManagerReportsViewModel`)**:
+  - Giao diện chuẩn phong cách Quản lý, hiển thị huy hiệu chi nhánh trực thuộc nổi bật.
+  - Khóa cứng dữ liệu theo cơ sở của Quản lý; không có chức năng chọn cơ sở khác hay xem dữ liệu cơ sở khác.
+  - Biểu đồ LiveCharts2 doanh thu theo ngày và tỷ lệ lấp đầy 6 sân trực thuộc chi nhánh.
+  - Danh sách Top khách hàng thường xuyên phát sinh doanh số tại cơ sở mình.
+- [x] **Đạt tiêu chí nghiệm thu Ngày 9 (DoD Ngày 9)**:
+  - *"Số liệu báo cáo khớp với dữ liệu seed khi đối chiếu tay bằng SQL"*.
+  - Xây dựng script SQL đối soát độc lập [`scripts/verify_day9_reports.sql`](scripts/verify_day9_reports.sql) đối chiếu tay 100% khớp số liệu seed trong `BadmintonDb`.
+  - Toàn bộ **191/191 unit tests tự động vượt qua (100% Passed)** với 18 bài test mới bao phủ `ReportServiceTests` (8 tests), `AdminReportsViewModelTests` (4 tests), `ManagerReportsViewModelTests` (4 tests), và cập nhật điều hướng trong `ShellNavigationTests` (2 tests).
+
 ---
 
 ## 🏗 Cấu trúc dự án
@@ -214,9 +236,11 @@ BadmintonCourtManagement/
 │   ├── DOD_DAY5_REPORT.md            # Báo cáo nghiệm thu Ngày 5
 │   ├── DOD_DAY6_REPORT.md            # Báo cáo nghiệm thu Ngày 6
 │   ├── DOD_DAY7_REPORT.md            # Báo cáo nghiệm thu Ngày 7
-│   └── DOD_DAY8_REPORT.md            # Báo cáo nghiệm thu Ngày 8
+│   ├── DOD_DAY8_REPORT.md            # Báo cáo nghiệm thu Ngày 8
+│   └── DOD_DAY9_REPORT.md            # Báo cáo nghiệm thu Ngày 9
 ├── scripts/
 │   ├── verify_day1_dod.sql           # Script SQL kiểm tra đạt tiêu chí Ngày 1 bằng SSMS
+│   ├── verify_day9_reports.sql        # Script SQL đối soát số liệu báo cáo Ngày 9
 │   └── Verify-Database.ps1           # Script PowerShell kiểm thử tự động
 ├── BadmintonManager/
 │   ├── App.xaml / App.xaml.cs         # Host, DI, Startup, Migration, Seeder & DI Services Registration
@@ -232,23 +256,23 @@ BadmintonCourtManagement/
 │   │   ├── DbSeeder.cs                # Seed dữ liệu mẫu (3 cơ sở, 18 sân, tài khoản, giá, settings, ~55 bookings)
 │   │   └── DbHealthChecker.cs         # Kiểm tra đạt chuẩn Definition of Done (DoD)
 │   ├── Services/
-│   │   ├── Interfaces/                # IAuthService, IBranchCourtService, IUserService, IPricingService, IMembershipService...
-│   │   └── (AuthService, BranchCourtService, UserService, PricingService, MembershipService, ...)
+│   │   ├── Interfaces/                # IAuthService, IBranchCourtService, IUserService, IPricingService, IReportService...
+│   │   └── (AuthService, BranchCourtService, UserService, PricingService, MembershipService, ReportService, ...)
 │   ├── Common/
 │   │   ├── Result.cs                  # Standard Result / Result<T> pattern
 │   │   ├── CurrentUserContext.cs      # Thông tin phiên đăng nhập (Singleton)
 │   │   ├── Exceptions/                # BusinessException, ForbiddenException
 │   │   └── Constants.cs
-│   ├── DTOs/                          # AuthDtos, BranchCourtDtos, UserDtos, PricingDtos, CustomerDtos, BookingDtos
+│   ├── DTOs/                          # AuthDtos, BranchCourtDtos, UserDtos, PricingDtos, CustomerDtos, BookingDtos, ReportDtos
 │   ├── ViewModels/
 │   │   ├── Base/                      # ViewModelBase (ObservableObject, IsBusy, RunAsync), PlaceholderPageViewModel
 │   │   ├── Admin/                     # AdminDashboardViewModel, AdminBranchesViewModel, AdminCourtsViewModel,
-│   │   │                              # AdminUsersViewModel, AdminPricingViewModel, AdminTiersViewModel
-│   │   ├── Manager/                   # ManagerDashboardViewModel, ManagerCourtsViewModel, ManagerStaffViewModel
+│   │   │                              # AdminUsersViewModel, AdminPricingViewModel, AdminTiersViewModel, AdminReportsViewModel
+│   │   ├── Manager/                   # ManagerDashboardViewModel, ManagerCourtsViewModel, ManagerStaffViewModel, ManagerReportsViewModel
 │   │   ├── Staff/                     # StaffDashboardViewModel
 │   │   ├── Customer/                  # CustomerDashboardViewModel, CustomerBookCourtViewModel,
 │   │   │                              # CustomerBookingsViewModel, CustomerPointsViewModel
-│   │   ├── Shared/                    # UserProfileViewModel
+│   │   ├── Shared/                    # UserProfileViewModel, ScheduleViewModel, BookingListViewModel, CustomerListViewModel
 │   │   ├── LoginViewModel.cs          # Đăng nhập hệ thống
 │   │   ├── RegisterViewModel.cs       # Đăng ký tài khoản khách hàng
 │   │   └── ShellViewModel.cs          # Điều hướng menu động phân quyền theo 4 vai trò
@@ -256,13 +280,12 @@ BadmintonCourtManagement/
 │   │   ├── LoginWindow.xaml           # Cửa sổ đăng nhập
 │   │   ├── RegisterWindow.xaml        # Cửa sổ đăng ký khách hàng
 │   │   ├── ShellWindow.xaml           # Khung giao diện chính với Navigation Bar và Viewport
-│   │   └── Pages/                     # CustomerBookCourtPage, CustomerBookingsPage, CustomerPointsPage,
-│   │                                  # CustomerDashboardPage, SchedulePage, BookingListPage, CustomerListPage...
+│   │   └── Pages/                     # AdminReportsPage, ManagerReportsPage, CustomerBookCourtPage, CustomerBookingsPage...
 │   ├── Infrastructure/                # NavigationService, DialogService, InvoicePrinter
 │   ├── Converters/                    # BoolToVisibility, MoneyConverter, StatusToBrushConverter
 │   └── Resources/                     # Colors.xaml, Styles.xaml
 └── tests/
-    └── BadmintonManager.Tests/        # 173 bài kiểm thử tự động xUnit (DoD Ngày 1 đến 8 100% Passed)
+    └── BadmintonManager.Tests/        # 191 bài kiểm thử tự động xUnit (DoD Ngày 1 đến 9 100% Passed)
 ```
 
 ---
@@ -295,7 +318,7 @@ Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư m
 }
 ```
 
-### 2. Chạy toàn bộ 173 bài kiểm thử tự động (Unit Tests)
+### 2. Chạy toàn bộ 191 bài kiểm thử tự động (Unit Tests)
 ```powershell
 dotnet test
 ```
@@ -306,6 +329,20 @@ Mở solution `BadmintonCourtManagement.sln` trong Visual Studio 2022 và nhấn
 dotnet run --project BadmintonManager/BadmintonManager.csproj
 ```
 Khi ứng dụng mở:
+- **Kiểm thử DoD Ngày 9 (Báo Cáo & Thống Kê Doanh Thu, LiveCharts2 & Đối Soát SQL)**:
+  - **Kiểm thử Báo cáo Quản trị viên (Admin)**:
+    - Đăng nhập: `admin` / `123456`.
+    - Mở menu **"Báo cáo doanh thu"**: Xem 4 thẻ KPI tổng quan hệ thống, biểu đồ cột doanh thu ngày LiveCharts2, biểu đồ so sánh 3 cơ sở cạnh nhau (Cơ sở Cầu Giấy, Đống Đa, Thanh Xuân), biểu đồ tỷ lệ lấp đầy top sân và danh sách top khách hàng thân thiết.
+    - Chọn một cơ sở cụ thể trong ComboBox và bấm "Xem Báo Cáo" -> Số liệu và biểu đồ tự động cập nhật riêng cho cơ sở đó.
+  - **Kiểm thử Báo cáo Quản lý cơ sở (Manager)**:
+    - Đăng nhập: `manager1` / `123456`.
+    - Mở menu **"Báo cáo doanh thu cơ sở"**: Hệ thống khóa cứng theo "Cơ sở Cầu Giấy", hiển thị huy hiệu cơ sở trực thuộc; không có bộ chọn cơ sở khác, không có tab so sánh đa cơ sở. Mọi số liệu chỉ hiển thị các đơn và 6 sân của Cơ sở Cầu Giấy.
+  - **Đối soát số liệu bằng SQL (DoD Ngày 9)**:
+    - Chạy script SQL đối soát:
+      ```powershell
+      sqlcmd -S localhost -d BadmintonDb -i scripts/verify_day9_reports.sql
+      ```
+    - Đối chiếu tay số liệu kết quả SQL với ứng dụng: tổng doanh thu, số lượt booking, doanh thu từng cơ sở, tỷ lệ lấp đầy sân và top khách hàng khớp 100%.
 - **Kiểm thử DoD Ngày 8 (Customer Portal & Bảo Mật Chống Truy Cập Chéo)**:
   - Đăng nhập tài khoản Khách hàng: `customer1` / `123456`.
   - **Phân quyền Menu**: Khách hàng chỉ thấy 4 menu riêng biệt (Dashboard, Đặt sân trực tuyến, Lịch sử đặt sân, Điểm thưởng), ẩn toàn bộ menu quản trị của Admin, Manager, Staff.
