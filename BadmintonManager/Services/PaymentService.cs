@@ -58,6 +58,11 @@ public class PaymentService : IPaymentService
             throw new BusinessException("Số tiền thanh toán phải lớn hơn 0 VNĐ.");
         }
 
+        if (_currentUser.IsCustomer)
+        {
+            throw new ForbiddenException("Khách hàng không có quyền thực hiện giao dịch thu tiền.");
+        }
+
         await using var db = await _factory.CreateDbContextAsync();
         await using var transaction = await BeginTransactionSafelyAsync(db);
 

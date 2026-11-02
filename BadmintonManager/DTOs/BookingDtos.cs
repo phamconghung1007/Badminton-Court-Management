@@ -57,3 +57,26 @@ public record CancelBookingRequest
     public int BookingId { get; init; }
     public string Reason { get; init; } = string.Empty;
 }
+
+public record AvailableCourtDto
+{
+    public int CourtId { get; init; }
+    public string CourtName { get; init; } = string.Empty;
+    public int BranchId { get; init; }
+    public string BranchName { get; init; } = string.Empty;
+    public DateTime StartTime { get; init; }
+    public DateTime EndTime { get; init; }
+    public decimal SubTotal { get; init; }
+    public decimal DiscountPercent { get; init; }
+    public decimal DiscountAmount { get; init; }
+    public decimal FinalAmount { get; init; }
+    public decimal DepositAmount { get; init; }
+}
+
+public record SearchAvailableCourtsRequest
+{
+    public int BranchId { get; init; }
+    public DateTime Date { get; init; }
+    public TimeSpan StartTime { get; init; }
+    public TimeSpan EndTime { get; init; }
+}

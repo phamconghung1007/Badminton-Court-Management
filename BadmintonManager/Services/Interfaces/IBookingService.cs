@@ -16,6 +16,7 @@ public interface IBookingService
     Task CheckInAsync(int bookingId);
     Task MarkNoShowAsync(int bookingId);
     Task CancelBookingAsync(CancelBookingRequest request);
+    Task<List<AvailableCourtDto>> GetAvailableCourtsAsync(SearchAvailableCourtsRequest request);
     Task<FixedScheduleResultDto> CreateFixedScheduleAsync(CreateFixedScheduleRequest request);
     Task CancelFixedScheduleAsync(int scheduleId);
 }

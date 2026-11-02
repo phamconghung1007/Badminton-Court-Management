@@ -145,7 +145,7 @@ public class BookingService : IBookingService
         {
             if (b.CustomerId != _currentUser.CustomerId)
             {
-                throw new ForbiddenException();
+                throw new ForbiddenException("Bạn không có quyền xem thông tin đặt sân của người khác.");
             }
         }
 
@@ -343,7 +343,7 @@ public class BookingService : IBookingService
             {
                 if (booking.CustomerId != _currentUser.CustomerId)
                 {
-                    throw new ForbiddenException();
+                    throw new ForbiddenException("Bạn không có quyền chỉnh sửa đơn đặt sân của khách hàng khác.");
                 }
                 if ((booking.StartTime - DateTime.Now).TotalHours < 24)
                 {
@@ -461,7 +461,7 @@ public class BookingService : IBookingService
 
         if (_currentUser.IsCustomer && booking.CustomerId != _currentUser.CustomerId)
         {
-            throw new ForbiddenException();
+            throw new ForbiddenException("Bạn không có quyền hủy đơn đặt sân của khách hàng khác.");
         }
 
         int userId = _currentUser.Id ?? 1;
@@ -499,6 +499,94 @@ public class BookingService : IBookingService
         }
 
         await db.SaveChangesAsync();
+    }
+
+    public async Task<List<AvailableCourtDto>> GetAvailableCourtsAsync(SearchAvailableCourtsRequest request)
+    {
+        DateTime start = request.Date.Date.Add(request.StartTime);
+        DateTime end = request.Date.Date.Add(request.EndTime);
+
+        await ValidateBookingTimeAsync(start, end, false);
+
+        await using var db = await _factory.CreateDbContextAsync();
+
+        var courts = await db.Courts
+            .Include(c => c.Branch)
+            .Where(c => c.BranchId == request.BranchId && c.IsActive)
+            .OrderBy(c => c.Name)
+            .ToListAsync();
+
+        int? customerId = _currentUser.IsCustomer ? _currentUser.CustomerId : null;
+
+        var availableCourts = new List<AvailableCourtDto>();
+
+        foreach (var court in courts)
+        {
+            if (await IsCourtFreeAsync(db, court.Id, start, end))
+            {
+                var pricing = await _pricingService.CalculatePriceAsync(court.Id, start, end, customerId);
+                availableCourts.Add(new AvailableCourtDto
+                {
+                    CourtId = court.Id,
+                    CourtName = court.Name,
+                    BranchId = court.BranchId,
+                    BranchName = court.Branch.Name,
+                    StartTime = start,
+                    EndTime = end,
+                    SubTotal = pricing.SubTotal,
+                    DiscountPercent = pricing.DiscountPercent,
+                    DiscountAmount = pricing.DiscountAmount,
+                    FinalAmount = pricing.FinalAmount,
+                    DepositAmount = pricing.DepositAmount
+                });
+            }
+        }
+
+        return availableCourts;
+    }
+
+    private static async Task<bool> IsCourtFreeAsync(AppDbContext db, int courtId, DateTime s, DateTime e)
+    {
+        DateTime dayStart = s.Date.AddHours(6);
+        DateTime dayEnd = s.Date.AddDays(1);
+
+        var existingBookings = await db.Bookings
+            .Where(b => b.CourtId == courtId &&
+                        b.Status != BookingStatus.Cancelled &&
+                        b.StartTime < dayEnd && b.EndTime > dayStart)
+            .OrderBy(b => b.StartTime)
+            .ToListAsync();
+
+        // BR-03
+        if (existingBookings.Any(b => b.StartTime < e && s < b.EndTime))
+        {
+            return false;
+        }
+
+        // BR-04
+        DateTime prevEnd = dayStart;
+        var prevs = existingBookings.Where(b => b.EndTime <= s).ToList();
+        if (prevs.Any())
+        {
+            prevEnd = prevs.Max(b => b.EndTime);
+        }
+
+        DateTime nextStart = dayEnd;
+        var nexts = existingBookings.Where(b => b.StartTime >= e).ToList();
+        if (nexts.Any())
+        {
+            nextStart = nexts.Min(b => b.StartTime);
+        }
+
+        int gapBefore = (int)(s - prevEnd).TotalMinutes;
+        int gapAfter = (int)(nextStart - e).TotalMinutes;
+
+        if (gapBefore == 30 || gapAfter == 30)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public async Task<FixedScheduleResultDto> CreateFixedScheduleAsync(CreateFixedScheduleRequest request)

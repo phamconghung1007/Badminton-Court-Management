@@ -65,6 +65,11 @@ public class FixedScheduleService : IFixedScheduleService
             throw new ForbiddenException("Bạn chỉ có quyền tạo lịch cố định cho sân thuộc chi nhánh của mình.");
         }
 
+        if (_currentUser.IsCustomer && request.CustomerId != _currentUser.CustomerId)
+        {
+            throw new ForbiddenException("Bạn chỉ có quyền tạo lịch cố định cho chính mình.");
+        }
+
         // 2. Kiểm tra khách hàng
         var customer = await db.Customers.Include(c => c.MembershipTier).FirstOrDefaultAsync(c => c.Id == request.CustomerId);
         if (customer == null || !customer.IsActive)
@@ -265,6 +270,11 @@ public class FixedScheduleService : IFixedScheduleService
             throw new ForbiddenException("Bạn chỉ có quyền hủy lịch cố định thuộc chi nhánh của mình.");
         }
 
+        if (_currentUser.IsCustomer && schedule.CustomerId != _currentUser.CustomerId)
+        {
+            throw new ForbiddenException("Bạn không có quyền hủy lịch cố định của khách hàng khác.");
+        }
+
         schedule.IsActive = false;
 
         // BR-19: Hủy các booking tương lai chưa check-in thuộc lịch đó
@@ -304,6 +314,10 @@ public class FixedScheduleService : IFixedScheduleService
             {
                 query = query.Where(s => s.Court.BranchId == _currentUser.BranchId.Value);
             }
+        }
+        else if (_currentUser.IsCustomer)
+        {
+            query = query.Where(s => s.CustomerId == _currentUser.CustomerId);
         }
         else if (branchId.HasValue)
         {

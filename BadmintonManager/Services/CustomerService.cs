@@ -26,6 +26,11 @@ public class CustomerService : ICustomerService
 
     public async Task<List<CustomerDto>> SearchCustomersAsync(string? keyword)
     {
+        if (_currentUser.IsCustomer)
+        {
+            throw new ForbiddenException("Khách hàng không có quyền xem danh sách khách hàng của hệ thống.");
+        }
+
         await using var db = await _factory.CreateDbContextAsync();
         var query = db.Customers
             .AsNoTracking()
@@ -61,6 +66,11 @@ public class CustomerService : ICustomerService
 
     public async Task<CustomerDto?> GetCustomerByIdAsync(int id)
     {
+        if (_currentUser.IsCustomer && _currentUser.CustomerId != id)
+        {
+            throw new ForbiddenException("Bạn không có quyền xem thông tin của khách hàng khác.");
+        }
+
         await using var db = await _factory.CreateDbContextAsync();
         var c = await db.Customers
             .AsNoTracking()
@@ -89,6 +99,11 @@ public class CustomerService : ICustomerService
 
     public async Task<CustomerDetailDto?> GetCustomerDetailAsync(int id)
     {
+        if (_currentUser.IsCustomer && _currentUser.CustomerId != id)
+        {
+            throw new ForbiddenException("Bạn không có quyền xem thông tin hồ sơ của khách hàng khác.");
+        }
+
         await using var db = await _factory.CreateDbContextAsync();
         var c = await db.Customers
             .AsNoTracking()
@@ -202,6 +217,11 @@ public class CustomerService : ICustomerService
 
     public async Task<CustomerDto> CreateCustomerAsync(CustomerCreateDto request)
     {
+        if (_currentUser.IsCustomer)
+        {
+            throw new ForbiddenException("Khách hàng không có quyền tạo hồ sơ tại quầy.");
+        }
+
         if (string.IsNullOrWhiteSpace(request.FullName))
             throw new BusinessException("Họ và tên khách hàng không được để trống.");
 
@@ -252,6 +272,11 @@ public class CustomerService : ICustomerService
 
     public async Task<CustomerDto> UpdateCustomerAsync(CustomerUpdateDto request)
     {
+        if (_currentUser.IsCustomer && _currentUser.CustomerId != request.Id)
+        {
+            throw new ForbiddenException("Bạn không có quyền chỉnh sửa thông tin của khách hàng khác.");
+        }
+
         if (string.IsNullOrWhiteSpace(request.FullName))
             throw new BusinessException("Họ và tên khách hàng không được để trống.");
 
@@ -293,6 +318,11 @@ public class CustomerService : ICustomerService
 
     public async Task<bool> ToggleCustomerStatusAsync(int id)
     {
+        if (_currentUser.IsCustomer)
+        {
+            throw new ForbiddenException("Khách hàng không có quyền thay đổi trạng thái tài khoản khách hàng.");
+        }
+
         await using var db = await _factory.CreateDbContextAsync();
         var customer = await db.Customers.FindAsync(id);
         if (customer == null) throw new BusinessException("Không tìm thấy khách hàng.");
@@ -304,6 +334,11 @@ public class CustomerService : ICustomerService
 
     public async Task DeleteCustomerAsync(int id)
     {
+        if (_currentUser.IsCustomer)
+        {
+            throw new ForbiddenException("Khách hàng không có quyền xóa hồ sơ khách hàng.");
+        }
+
         // BR-21: Không xóa cứng dữ liệu đã có booking (cơ sở, sân, khách): dùng IsActive / xóa mềm
         await using var db = await _factory.CreateDbContextAsync();
         var customer = await db.Customers.FindAsync(id);
