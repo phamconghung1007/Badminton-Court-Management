@@ -29,6 +29,7 @@ public partial class ScheduleViewModel : ViewModelBase
     private readonly IPaymentService? _paymentService;
     private readonly IInvoiceService? _invoiceService;
     private readonly IInvoicePrinter? _invoicePrinter;
+    private readonly IFixedScheduleService? _fixedScheduleService;
 
     [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
     [ObservableProperty] private BranchDto? _selectedBranch;
@@ -95,7 +96,8 @@ public partial class ScheduleViewModel : ViewModelBase
         IDialogService dialogService,
         IPaymentService? paymentService = null,
         IInvoiceService? invoiceService = null,
-        IInvoicePrinter? invoicePrinter = null)
+        IInvoicePrinter? invoicePrinter = null,
+        IFixedScheduleService? fixedScheduleService = null)
     {
         _factory = factory;
         _currentUser = currentUser;
@@ -107,6 +109,7 @@ public partial class ScheduleViewModel : ViewModelBase
         _paymentService = paymentService;
         _invoiceService = invoiceService;
         _invoicePrinter = invoicePrinter;
+        _fixedScheduleService = fixedScheduleService;
 
         CanSelectBranch = _currentUser.IsAdmin;
 
@@ -634,6 +637,88 @@ public partial class ScheduleViewModel : ViewModelBase
         catch (Exception ex)
         {
             _dialogService.ShowError($"Không thể tạo hóa đơn: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenQuickWalkInAsync()
+    {
+        // A12 & BR-05: Khách vãng lai check-in ngay từ giờ hiện tại làm tròn xuống mốc 30 phút
+        DateTime now = DateTime.Now;
+        int roundMinute = now.Minute < 30 ? 0 : 30;
+        DateTime start = new DateTime(now.Year, now.Month, now.Day, now.Hour, roundMinute, 0);
+        DateTime end = start.AddMinutes(60);
+
+        // Chuyển ngày xem về hôm nay
+        SelectedDate = DateTime.Today;
+        FormDate = DateTime.Today;
+
+        // Tìm sân đầu tiên đang trống tại khung [start, end]
+        var freeCourt = Courts.FirstOrDefault(c =>
+            !Bookings.Any(b => b.CourtId == c.CourtId && b.StartTime < end && start < b.EndTime));
+
+        FormIsWalkIn = true;
+        FormIsMember = false;
+        FormGuestName = "Khách vãng lai";
+        FormGuestPhone = string.Empty;
+        FormSelectedCustomer = null;
+
+        FormStartTimeStr = $"{start.Hour:D2}:{start.Minute:D2}";
+        FormEndTimeStr = $"{end.Hour:D2}:{end.Minute:D2}";
+        FormDurationMinutes = 60;
+        FormSelectedCourt = freeCourt ?? Courts.FirstOrDefault();
+
+        IsDetailsOpen = false;
+        IsBookingFormOpen = true;
+
+        await RecalculatePricePreviewAsync();
+    }
+
+    [RelayCommand]
+    public async Task OpenFixedScheduleDialogAsync()
+    {
+        if (_fixedScheduleService != null)
+        {
+            int custId = DetailedBooking?.CustomerId ?? 1;
+            string custName = DetailedBooking?.CustomerName ?? "Khách hàng hội viên";
+
+            var dlg = new BadmintonManager.Views.Dialogs.FixedScheduleDialog(
+                _fixedScheduleService,
+                _branchCourtService,
+                _currentUser,
+                custId,
+                custName);
+
+            dlg.Owner = System.Windows.Application.Current?.MainWindow;
+            if (dlg.ShowDialog() == true)
+            {
+                await LoadScheduleDataInternalAsync();
+            }
+        }
+    }
+
+    [RelayCommand]
+    public async Task CancelFixedScheduleAsync()
+    {
+        if (DetailedBooking == null || !DetailedBooking.FixedScheduleId.HasValue || _fixedScheduleService == null) return;
+
+        bool confirm = _dialogService.ShowConfirmation(
+            $"Bạn có chắc chắn muốn hủy toàn bộ lịch cố định #{DetailedBooking.FixedScheduleId.Value} không?\n" +
+            "Tất cả các buổi chơi trong tương lai chưa check-in sẽ tự động bị hủy theo quy tắc BR-19.",
+            "Xác nhận hủy lịch cố định");
+
+        if (!confirm) return;
+
+        try
+        {
+            await _fixedScheduleService.CancelFixedScheduleAsync(DetailedBooking.FixedScheduleId.Value);
+            _dialogService.ShowInfo("Đã hủy toàn bộ lịch cố định thành công!", "Thông báo");
+            DetailedBooking = await _bookingService.GetBookingByIdAsync(DetailedBooking.Id);
+            await LoadScheduleDataInternalAsync();
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowError($"Không thể hủy lịch cố định: {ex.Message}");
         }
     }
 

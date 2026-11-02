@@ -90,6 +90,28 @@
                     </StackPanel>
                 </Button>
 
+                <!-- Quick Walk-in Button -->
+                <Button Command="{Binding OpenQuickWalkInCommand}"
+                        Style="{StaticResource OutlineButtonStyle}"
+                        Margin="0,0,10,0" Height="38"
+                        ToolTip="Khách vãng lai vào sân ngay lập tức (A12 &amp; BR-05)">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Walk" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#10B981"/>
+                        <TextBlock Text="Khách vãng lai" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#10B981"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Fixed Schedule Button -->
+                <Button Command="{Binding OpenFixedScheduleDialogCommand}"
+                        Style="{StaticResource OutlineButtonStyle}"
+                        Margin="0,0,10,0" Height="38"
+                        ToolTip="Đăng ký lịch cố định 4 tuần (BR-18)">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CalendarClock" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#059669"/>
+                        <TextBlock Text="Lịch cố định" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#059669"/>
+                    </StackPanel>
+                </Button>
+
                 <!-- New Booking Button -->
                 <Button Command="{Binding OpenCreateBookingFormCommand}"
                         Style="{StaticResource PrimaryButtonStyle}"
@@ -702,6 +724,19 @@
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Cancel" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="Hủy Đơn Đặt Sân" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Nút Hủy toàn bộ lịch cố định (BR-19) -->
+                            <Button Command="{Binding CancelFixedScheduleCommand}"
+                                    Style="{StaticResource OutlineButtonStyle}"
+                                    BorderBrush="#B91C1C" Foreground="#B91C1C"
+                                    Margin="0,8,0,0" Height="40"
+                                    Visibility="{Binding DetailedBooking.IsFixed, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    ToolTip="Hủy tất cả các buổi chơi tương lai chưa check-in của lịch cố định này (BR-19)">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="CalendarRemove" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Hủy Toàn Bộ Lịch Cố Định" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

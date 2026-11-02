@@ -16,6 +16,7 @@ public record BookingItemDto
     public string? GuestName { get; init; }
     public string? GuestPhone { get; init; }
     public BookingType BookingType { get; init; }
+    public int? FixedScheduleId { get; init; }
     public DateTime StartTime { get; init; }
     public DateTime EndTime { get; init; }
     public BookingStatus Status { get; init; }
@@ -27,6 +28,7 @@ public record BookingItemDto
     public decimal PaidAmount { get; init; }
     public decimal RemainingAmount => Math.Max(0, FinalAmount - PaidAmount);
     public string? CustomerPhone { get; init; }
+    public bool IsFixed => FixedScheduleId.HasValue;
     public DateTime CreatedAt { get; init; }
 }
 
@@ -37,6 +39,7 @@ public record CreateBookingRequest
     public string? GuestName { get; init; }
     public string? GuestPhone { get; init; }
     public BookingType BookingType { get; init; } = BookingType.Single;
+    public int? FixedScheduleId { get; init; }
     public DateTime StartTime { get; init; }
     public DateTime EndTime { get; init; }
 }

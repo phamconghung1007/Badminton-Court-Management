@@ -456,5 +456,105 @@ public class ScheduleServiceTests
         vm.DetailedBooking!.Code.Should().Be(block.Code);
     }
 
+    [Fact]
+    public async Task Day7_DoD_ScheduleViewModel_QuickWalkIn_PrefillsNowAndCreatesCheckedInBooking()
+    {
+        // Arrange
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        var settingService = new SettingService(factory);
+        var fixedScheduleService = new FixedScheduleService(factory, currentUser, pricingService, settingService);
+
+        var vm = new ScheduleViewModel(
+            factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService,
+            fixedScheduleService: fixedScheduleService);
+
+        await vm.InitializeAsync();
+
+        // Act: Lễ tân bấm nút Khách vãng lai check-in ngay (A12)
+        await vm.OpenQuickWalkInAsync();
+
+        // Assert: Form được chuẩn bị sẵn với giờ hiện tại làm tròn 30 phút (BR-05) và chọn sân trống
+        vm.IsBookingFormOpen.Should().BeTrue();
+        vm.FormIsWalkIn.Should().BeTrue();
+        vm.FormGuestName.Should().Be("Khách vãng lai");
+        vm.FormSelectedCourt.Should().NotBeNull();
+
+        // Act 2: Bấm xác nhận đặt sân & check-in vào sân
+        await vm.ConfirmCreateBookingAsync();
+
+        // Assert 2: Booking được tạo với trạng thái CheckedIn ngay lập tức (A7 & A12)
+        dialogService.LastInfoMessage.Should().Contain("Đặt sân thành công");
+        vm.IsBookingFormOpen.Should().BeFalse();
+
+        // Kiểm tra booking xuất hiện trên grid với trạng thái CheckedIn
+        var created = vm.Bookings.FirstOrDefault(b => b.CourtId == vm.FormSelectedCourt!.CourtId);
+        created.Should().NotBeNull();
+        created!.Status.Should().Be(BookingStatus.CheckedIn);
+        created.BackgroundHex.Should().Be("#10B981"); // Màu xanh lá CheckedIn
+    }
+
+    [Fact]
+    public async Task Day7_DoD_ScheduleViewModel_CancelFixedSchedule_CancelsFutureBookings()
+    {
+        // Arrange
+        var (factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService) = CreateTestSetup(UserRole.Staff, branchId: 1);
+        await using (var db = await factory.CreateDbContextAsync())
+        {
+            await DbSeeder.SeedAsync(db);
+        }
+
+        var settingService = new SettingService(factory);
+        var fixedScheduleService = new FixedScheduleService(factory, currentUser, pricingService, settingService);
+
+        // Tạo 1 lịch cố định 4 tuần
+        DateOnly startDay = DateOnly.FromDateTime(DateTime.Today.AddDays(2));
+        var fixReq = new CreateFixedScheduleRequest
+        {
+            CustomerId = 1,
+            CourtId = 1,
+            DayOfWeek = (int)startDay.DayOfWeek,
+            StartMinute = 480,
+            EndMinute = 600,
+            ValidFrom = startDay,
+            NumberOfWeeks = 4
+        };
+        var fixResult = await fixedScheduleService.CreateFixedScheduleAsync(fixReq);
+        fixResult.CreatedCount.Should().Be(4);
+
+        var vm = new ScheduleViewModel(
+            factory, currentUser, bookingService, branchCourtService, pricingService, customerService, dialogService,
+            fixedScheduleService: fixedScheduleService);
+
+        vm.SelectedDate = startDay.ToDateTime(TimeOnly.MinValue);
+        await vm.InitializeAsync();
+
+        // Chọn 1 booking thuộc lịch cố định
+        var block = vm.Bookings.First(b => b.CourtId == 1 && b.StartTime.Date == startDay.ToDateTime(TimeOnly.MinValue).Date);
+        await vm.OpenBookingDetailsAsync(block);
+
+        vm.DetailedBooking.Should().NotBeNull();
+        vm.DetailedBooking!.FixedScheduleId.Should().Be(fixResult.ScheduleId);
+        vm.DetailedBooking.IsFixed.Should().BeTrue();
+
+        // Act: Hủy toàn bộ lịch cố định (BR-19)
+        await vm.CancelFixedScheduleAsync();
+
+        // Assert: Toàn bộ booking tương lai thuộc lịch cố định bị hủy
+        dialogService.LastInfoMessage.Should().Contain("Đã hủy toàn bộ lịch cố định thành công");
+        using (var db = await factory.CreateDbContextAsync())
+        {
+            var schedule = await db.FixedSchedules.FindAsync(fixResult.ScheduleId);
+            schedule!.IsActive.Should().BeFalse();
+
+            var futureBookings = await db.Bookings.Where(b => b.FixedScheduleId == fixResult.ScheduleId).ToListAsync();
+            futureBookings.All(b => b.Status == BookingStatus.Cancelled).Should().BeTrue();
+        }
+    }
+
     #endregion
 }
