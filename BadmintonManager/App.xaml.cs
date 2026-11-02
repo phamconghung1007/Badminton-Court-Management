@@ -137,17 +137,15 @@ public partial class App : Application
                 if (e.Args.Contains("--verify-dod"))
                 {
                     var report = await DbHealthChecker.VerifyDay1DoDAsync(db);
-                    Console.WriteLine("==================================================");
-                    Console.WriteLine("      BÁO CÁO KIỂM TRA ĐẠT TIÊU CHÍ NGÀY 1 (DoD)  ");
-                    Console.WriteLine("==================================================");
-                    foreach (var item in report.Items)
-                    {
-                        string status = item.IsPassed ? "[PASS]" : "[FAIL]";
-                        Console.WriteLine($"{status} {item.Category}: {item.Description} -> {item.Details}");
-                    }
-                    Console.WriteLine("==================================================");
-                    Console.WriteLine($"KẾT QUẢ TỔNG QUAN: {(report.IsAllPassed ? "ĐẠT TOÀN BỘ TIÊU CHÍ NGÀY 1 (DoD SUCCESS)!" : "CẦN KIỂM TRA LẠI")}");
-                    Console.WriteLine("==================================================");
+                    DbHealthChecker.PrintReport(report, "BÁO CÁO KIỂM TRA ĐẠT TIÊU CHÍ NGÀY 1 (DoD)");
+                    Shutdown(report.IsAllPassed ? 0 : 1);
+                    return;
+                }
+
+                if (e.Args.Contains("--verify-day10") || e.Args.Contains("--verify-all"))
+                {
+                    var report = await DbHealthChecker.VerifyDay10FinalDoDAsync(db);
+                    DbHealthChecker.PrintReport(report, "BÁO CÁO NGHIỆM THU HỆ THỐNG TOÀN DIỆN - DAY 10 FINAL (DoD)");
                     Shutdown(report.IsAllPassed ? 0 : 1);
                     return;
                 }

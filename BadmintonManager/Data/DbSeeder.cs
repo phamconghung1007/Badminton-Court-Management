@@ -389,9 +389,112 @@ public static class DbSeeder
                 if (bookings.Count >= 55) break;
             }
 
+            // Ensure at least 1 Confirmed (today) and 1 Pending (tomorrow) booking exist
+            if (!bookings.Any(b => b.Status == BookingStatus.Confirmed))
+            {
+                var court1 = courts[0];
+                var staff1 = staff[0];
+                var cust1 = customers[0];
+                var todayBooking = new Booking
+                {
+                    Code = $"BK{DateTime.Today:yyyyMMdd}-{codeCounter++:D3}",
+                    CourtId = court1.Id,
+                    CustomerId = cust1.Id,
+                    BookingType = BookingType.Single,
+                    StartTime = DateTime.Today.AddHours(18),
+                    EndTime = DateTime.Today.AddHours(20),
+                    Status = BookingStatus.Confirmed,
+                    SubTotal = 200000m,
+                    DiscountPercent = 0m,
+                    DiscountAmount = 0m,
+                    FinalAmount = 200000m,
+                    DepositAmount = 60000m,
+                    CreatedByUserId = staff1.Id,
+                    CreatedAt = DateTime.Today.AddDays(-1),
+                    ConfirmedByUserId = staff1.Id
+                };
+                bookings.Add(todayBooking);
+                payments.Add(new Payment
+                {
+                    Booking = todayBooking,
+                    Amount = 60000m,
+                    Method = PaymentMethod.BankTransfer,
+                    Type = PaymentType.Deposit,
+                    ReferenceNo = $"DEP-{todayBooking.Code}",
+                    PaidAt = DateTime.Today.AddDays(-1).AddHours(2),
+                    ReceivedByUserId = staff1.Id,
+                    Note = "Đặt cọc online 30%"
+                });
+            }
+
+            if (!bookings.Any(b => b.Status == BookingStatus.Pending))
+            {
+                var court2 = courts[1];
+                var cust2 = customers[1];
+                var tmrBooking = new Booking
+                {
+                    Code = $"BK{DateTime.Today.AddDays(1):yyyyMMdd}-{codeCounter++:D3}",
+                    CourtId = court2.Id,
+                    CustomerId = cust2.Id,
+                    BookingType = BookingType.Single,
+                    StartTime = DateTime.Today.AddDays(1).AddHours(19),
+                    EndTime = DateTime.Today.AddDays(1).AddHours(21),
+                    Status = BookingStatus.Pending,
+                    SubTotal = 240000m,
+                    DiscountPercent = 5m,
+                    DiscountAmount = 12000m,
+                    FinalAmount = 228000m,
+                    DepositAmount = 68400m,
+                    CreatedByUserId = cust2.UserId ?? 1,
+                    CreatedAt = DateTime.Now
+                };
+                bookings.Add(tmrBooking);
+            }
+
             await context.Bookings.AddRangeAsync(bookings);
             await context.Payments.AddRangeAsync(payments);
             await context.SaveChangesAsync();
+        }
+        else
+        {
+            // Bổ sung đơn Confirmed và Pending nếu database đã seed từ trước nhưng chưa có đơn Confirmed cho ngày hôm nay
+            if (!await context.Bookings.AnyAsync(b => b.Status == BookingStatus.Confirmed))
+            {
+                var court1 = await context.Courts.FirstAsync();
+                var staff1 = await context.Users.FirstAsync(u => u.Role == UserRole.Staff);
+                var cust1 = await context.Customers.FirstAsync();
+                var todayBooking = new Booking
+                {
+                    Code = $"BK{DateTime.Today:yyyyMMdd}-CONF01",
+                    CourtId = court1.Id,
+                    CustomerId = cust1.Id,
+                    BookingType = BookingType.Single,
+                    StartTime = DateTime.Today.AddHours(18),
+                    EndTime = DateTime.Today.AddHours(20),
+                    Status = BookingStatus.Confirmed,
+                    SubTotal = 200000m,
+                    DiscountPercent = 0m,
+                    DiscountAmount = 0m,
+                    FinalAmount = 200000m,
+                    DepositAmount = 60000m,
+                    CreatedByUserId = staff1.Id,
+                    CreatedAt = DateTime.Today.AddDays(-1),
+                    ConfirmedByUserId = staff1.Id
+                };
+                context.Bookings.Add(todayBooking);
+                context.Payments.Add(new Payment
+                {
+                    Booking = todayBooking,
+                    Amount = 60000m,
+                    Method = PaymentMethod.BankTransfer,
+                    Type = PaymentType.Deposit,
+                    ReferenceNo = $"DEP-{todayBooking.Code}",
+                    PaidAt = DateTime.Today.AddDays(-1).AddHours(2),
+                    ReceivedByUserId = staff1.Id,
+                    Note = "Đặt cọc online 30%"
+                });
+                await context.SaveChangesAsync();
+            }
         }
     }
 }
