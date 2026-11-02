@@ -47,8 +47,8 @@ public class BranchCourtService : IBranchCourtService
             .Select(b => new BranchDto(
                 b.Id,
                 b.Name,
-                b.Address,
-                b.Phone,
+                b.Address ?? "",
+                b.Phone ?? "",
                 b.IsActive,
                 b.Courts.Count,
                 b.CreatedAt
