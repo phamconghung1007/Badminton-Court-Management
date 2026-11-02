@@ -59,6 +59,9 @@
         <DataTemplate DataType="{x:Type adminVm:AdminTiersViewModel}">
             <pages:AdminTiersPage />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type adminVm:AdminReportsViewModel}">
+            <pages:AdminReportsPage />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type mgrVm:ManagerStaffViewModel}">
             <pages:ManagerStaffPage />
         </DataTemplate>

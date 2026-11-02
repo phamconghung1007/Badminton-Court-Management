@@ -1,0 +1,359 @@
+<UserControl x:Class="BadmintonManager.Views.Pages.AdminReportsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             xmlns:converters="clr-namespace:BadmintonManager.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="1200"
+             Background="{DynamicResource MaterialDesignPaper}">
+
+    <UserControl.Resources>
+        <converters:MoneyConverter x:Key="MoneyConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisConverter" />
+    </UserControl.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Header & Filters -->
+            <RowDefinition Height="Auto" /> <!-- KPI Cards -->
+            <RowDefinition Height="*" />    <!-- Content & Charts -->
+        </Grid.RowDefinitions>
+
+        <!-- SECTION 1: HEADER & FILTER TOOLBAR -->
+        <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,16"
+                materialDesign:ElevationAssist.Elevation="Dp2">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Title & Quick Filters -->
+                <Grid Grid.Row="0" Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="ChartBox" Width="28" Height="28" Foreground="#4A154B" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="BÁO CÁO &amp; THỐNG KÊ TOÀN HỆ THỐNG" FontSize="22" FontWeight="Bold" Foreground="#1F2937" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Thống kê doanh thu thời gian thực, so sánh giữa 3 cơ sở và phân tích hiệu suất sân đấu." 
+                                   Foreground="#6B7280" FontSize="13" Margin="38,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Quick Date Range Buttons -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Hôm nay" Command="{Binding FilterTodayCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="34" Margin="0,0,6,0" Padding="10,0"/>
+                        <Button Content="Tuần này" Command="{Binding FilterThisWeekCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="34" Margin="0,0,6,0" Padding="10,0"/>
+                        <Button Content="Tháng này" Command="{Binding FilterThisMonthCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="34" Margin="0,0,6,0" Padding="10,0"/>
+                        <Button Content="30 ngày qua" Command="{Binding FilterLast30DaysCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="34" Padding="10,0"/>
+                    </StackPanel>
+                </Grid>
+
+                <Separator Grid.Row="0" VerticalAlignment="Bottom" Margin="0,0,0,0" Background="#E5E7EB"/>
+
+                <!-- Filter Inputs Row -->
+                <Grid Grid.Row="1" Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- From Date -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
+                        <TextBlock Text="Từ ngày:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#374151"/>
+                        <DatePicker SelectedDate="{Binding FromDate, Mode=TwoWay}" Width="130" Height="36" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- To Date -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,20,0" VerticalAlignment="Center">
+                        <TextBlock Text="Đến ngày:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#374151"/>
+                        <DatePicker SelectedDate="{Binding ToDate, Mode=TwoWay}" Width="130" Height="36" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Branch Selector -->
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding Branches}"
+                              SelectedItem="{Binding SelectedBranch, Mode=TwoWay}"
+                              DisplayMemberPath="Name"
+                              materialDesign:HintAssist.Hint="Tất cả cơ sở"
+                              IsEditable="False"
+                              Height="36"
+                              Margin="0,0,16,0"
+                              VerticalAlignment="Center"/>
+
+                    <!-- Action Buttons -->
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding LoadReportsCommand}" Style="{StaticResource MaterialDesignRaisedButton}" 
+                                Background="#4A154B" BorderBrush="#4A154B" Height="36" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Magnify" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="Xem Báo Cáo" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding ClearBranchFilterCommand}" Style="{StaticResource MaterialDesignFlatButton}" Height="36" Foreground="#6B7280">
+                            <TextBlock Text="Tất cả cơ sở"/>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Busy Indicator -->
+                    <ProgressBar Grid.Column="4" Style="{StaticResource MaterialDesignCircularProgressBar}" 
+                                 IsIndeterminate="True" Width="24" Height="24" HorizontalAlignment="Right" Margin="0,0,10,0"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisConverter}}"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- SECTION 2: 4 KPI CARDS -->
+        <Grid Grid.Row="1" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Card 1: Doanh thu -->
+            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0" materialDesign:ElevationAssist.Elevation="Dp2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="TỔNG DOANH THU" FontSize="11" FontWeight="Bold" Foreground="#6B7280" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Summary.TotalRevenue, Converter={StaticResource MoneyConverter}, FallbackValue='0 VNĐ'}" 
+                                   FontSize="20" FontWeight="Bold" Foreground="#059669"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="#ECFDF5" CornerRadius="8" Width="44" Height="44" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="CurrencyUsd" Width="26" Height="26" Foreground="#059669" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Card 2: Lượt đặt sân -->
+            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="16" Margin="5,0,5,0" materialDesign:ElevationAssist.Elevation="Dp2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="TỔNG LƯỢT ĐẶT" FontSize="11" FontWeight="Bold" Foreground="#6B7280" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Summary.TotalBookings, StringFormat='{}{0:N0} đơn', FallbackValue='0 đơn'}" 
+                                   FontSize="20" FontWeight="Bold" Foreground="#2563EB"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="#EFF6FF" CornerRadius="8" Width="44" Height="44" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="CalendarCheck" Width="26" Height="26" Foreground="#2563EB" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Card 3: Số giờ chơi -->
+            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="16" Margin="5,0,5,0" materialDesign:ElevationAssist.Elevation="Dp2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="GIỜ HOẠT ĐỘNG" FontSize="11" FontWeight="Bold" Foreground="#6B7280" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Summary.TotalBookedHours, StringFormat='{}{0:N1} giờ', FallbackValue='0.0 giờ'}" 
+                                   FontSize="20" FontWeight="Bold" Foreground="#D97706"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="#FFFBEB" CornerRadius="8" Width="44" Height="44" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="ClockOutline" Width="26" Height="26" Foreground="#D97706" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Card 4: Tỷ lệ lấp đầy bình quân -->
+            <Border Grid.Column="3" Background="White" CornerRadius="12" Padding="16" Margin="10,0,0,0" materialDesign:ElevationAssist.Elevation="Dp2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="TỶ LỆ LẤP ĐẦY" FontSize="11" FontWeight="Bold" Foreground="#6B7280" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Summary.AverageUtilizationRate, StringFormat='{}{0:N1}%', FallbackValue='0.0%'}" 
+                                   FontSize="20" FontWeight="Bold" Foreground="#7C3AED"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Background="#F5F3FF" CornerRadius="8" Width="44" Height="44" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="ChartPie" Width="26" Height="26" Foreground="#7C3AED" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- SECTION 3: TABS FOR DETAILED REPORTS & CHARTS -->
+        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="16" materialDesign:ElevationAssist.Elevation="Dp2">
+            <TabControl SelectedIndex="{Binding SelectedTabIndex}" BorderThickness="0" Background="Transparent">
+
+                <!-- TAB 1: DOANH THU THEO NGÀY -->
+                <TabItem Header="📊 Doanh Thu Theo Ngày" FontSize="14" FontWeight="SemiBold">
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="2*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- LiveCharts Column Chart -->
+                        <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="10" Padding="16" Margin="0,0,12,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Biểu đồ cột: Doanh thu theo từng ngày (VNĐ)" FontWeight="Bold" Foreground="#374151" Margin="0,0,0,12"/>
+                                <lvc:CartesianChart Grid.Row="1" Series="{Binding RevenueSeries}" XAxes="{Binding RevenueXAxes}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Daily Revenue Data Grid -->
+                        <Border Grid.Column="1" Background="#F9FAFB" CornerRadius="10" Padding="12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Bảng chi tiết doanh thu" FontWeight="Bold" Foreground="#374151" Margin="4,0,0,8"/>
+                                <DataGrid Grid.Row="1" ItemsSource="{Binding DailyRevenues}" AutoGenerateColumns="False" 
+                                          IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column"
+                                          Background="Transparent" BorderThickness="0">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Ngày" Binding="{Binding Date, StringFormat='dd/MM/yyyy'}" Width="100"/>
+                                        <DataGridTextColumn Header="Số đơn" Binding="{Binding BookingCount}" Width="80"/>
+                                        <DataGridTextColumn Header="Doanh thu (VNĐ)" Binding="{Binding TotalRevenue, Converter={StaticResource MoneyConverter}}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <!-- TAB 2: SO SÁNH 3 CƠ SỞ (ADMIN ONLY SPEC) -->
+                <TabItem Header="🏢 So Sánh 3 Cơ Sở" FontSize="14" FontWeight="SemiBold">
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="2*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Comparison Chart -->
+                        <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="10" Padding="16" Margin="0,0,12,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Biểu đồ so sánh doanh thu cạnh nhau giữa các chi nhánh" FontWeight="Bold" Foreground="#374151" Margin="0,0,0,12"/>
+                                <lvc:CartesianChart Grid.Row="1" Series="{Binding BranchComparisonSeries}" XAxes="{Binding BranchComparisonXAxes}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Branch Data Table -->
+                        <Border Grid.Column="1" Background="#F9FAFB" CornerRadius="10" Padding="12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Bảng tổng hợp chi nhánh" FontWeight="Bold" Foreground="#374151" Margin="4,0,0,8"/>
+                                <DataGrid Grid.Row="1" ItemsSource="{Binding BranchRevenueComparisons}" AutoGenerateColumns="False" 
+                                          IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column"
+                                          Background="Transparent" BorderThickness="0">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Tên cơ sở" Binding="{Binding BranchName}" Width="140"/>
+                                        <DataGridTextColumn Header="Số đơn" Binding="{Binding BookingCount}" Width="70"/>
+                                        <DataGridTextColumn Header="Doanh thu (VNĐ)" Binding="{Binding TotalRevenue, Converter={StaticResource MoneyConverter}}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <!-- TAB 3: TỶ LỆ LẤP ĐẦY SÂN -->
+                <TabItem Header="🏸 Tỷ Lệ Lấp Đầy Sân" FontSize="14" FontWeight="SemiBold">
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="2*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Occupancy Chart -->
+                        <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="10" Padding="16" Margin="0,0,12,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Top sân có tỷ lệ lấp đầy cao nhất (%)" FontWeight="Bold" Foreground="#374151" Margin="0,0,0,12"/>
+                                <lvc:CartesianChart Grid.Row="1" Series="{Binding OccupancySeries}" XAxes="{Binding OccupancyXAxes}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- All Courts Table -->
+                        <Border Grid.Column="1" Background="#F9FAFB" CornerRadius="10" Padding="12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Chi tiết hiệu suất từng sân đấu" FontWeight="Bold" Foreground="#374151" Margin="4,0,0,8"/>
+                                <DataGrid Grid.Row="1" ItemsSource="{Binding CourtUtilizations}" AutoGenerateColumns="False" 
+                                          IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column"
+                                          Background="Transparent" BorderThickness="0">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Sân" Binding="{Binding CourtName}" Width="80"/>
+                                        <DataGridTextColumn Header="Cơ sở" Binding="{Binding BranchName}" Width="120"/>
+                                        <DataGridTextColumn Header="Giờ chơi" Binding="{Binding BookedMinutes, StringFormat='{}{0:N0}p'}" Width="80"/>
+                                        <DataGridTextColumn Header="Tỷ lệ (%)" Binding="{Binding UtilizationRate, StringFormat='{}{0:N1}%'}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <!-- TAB 4: TOP KHÁCH HÀNG -->
+                <TabItem Header="👑 Top Khách Hàng Thân Thiết" FontSize="14" FontWeight="SemiBold">
+                    <Grid Margin="0,16,0,0">
+                        <Border Background="#F9FAFB" CornerRadius="10" Padding="16">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Danh sách khách hàng có tổng chi tiêu cao nhất" FontWeight="Bold" Foreground="#374151" Margin="4,0,0,12"/>
+                                <DataGrid Grid.Row="1" ItemsSource="{Binding TopCustomers}" AutoGenerateColumns="False" 
+                                          IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column"
+                                          Background="Transparent" BorderThickness="0">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Mã KH" Binding="{Binding CustomerId}" Width="80"/>
+                                        <DataGridTextColumn Header="Họ và tên" Binding="{Binding CustomerName}" Width="200"/>
+                                        <DataGridTextColumn Header="Số điện thoại" Binding="{Binding Phone}" Width="150"/>
+                                        <DataGridTextColumn Header="Số lượt đặt sân" Binding="{Binding TotalBookings}" Width="150"/>
+                                        <DataGridTextColumn Header="Tổng tiền chi tiêu (VNĐ)" Binding="{Binding TotalSpent, Converter={StaticResource MoneyConverter}}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+            </TabControl>
+        </Border>
+    </Grid>
+</UserControl>

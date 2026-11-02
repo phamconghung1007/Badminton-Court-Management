@@ -56,9 +56,11 @@ public class ShellNavigationTests
         services.AddTransient<IInvoiceService, InvoiceService>();
         services.AddTransient<IInvoicePrinter, InvoicePrinter>();
         services.AddTransient<IFixedScheduleService, FixedScheduleService>();
+        services.AddTransient<IReportService, ReportService>();
 
         // ViewModels
         services.AddTransient<AdminDashboardViewModel>();
+        services.AddTransient<AdminReportsViewModel>();
         services.AddTransient<ManagerDashboardViewModel>();
         services.AddTransient<StaffDashboardViewModel>();
         services.AddTransient<CustomerDashboardViewModel>();
@@ -210,7 +212,7 @@ public class ShellNavigationTests
     }
 
     [Fact]
-    public void ShellViewModel_NavigateToUpcomingFeature_ResolvesPlaceholderPageWithRoadmapTarget()
+    public void ShellViewModel_NavigateToAdminReports_ResolvesAdminReportsViewModel()
     {
         // Arrange
         var context = new CurrentUserContext();
@@ -220,6 +222,23 @@ public class ShellNavigationTests
 
         // Act
         var reportItem = shell.MenuItems.First(m => m.PageKey == "AdminReports");
+        shell.SelectedMenuItem = reportItem;
+
+        // Assert
+        shell.CurrentPageViewModel.Should().BeOfType<AdminReportsViewModel>();
+    }
+
+    [Fact]
+    public void ShellViewModel_NavigateToUpcomingFeature_ResolvesPlaceholderPageWithRoadmapTarget()
+    {
+        // Arrange
+        var context = new CurrentUserContext();
+        context.SetUser(2, "manager1", "Manager User", UserRole.Manager, 1, "Cơ sở Cầu Giấy");
+        var sp = CreateTestServiceProvider(context);
+        var shell = sp.GetRequiredService<ShellViewModel>();
+
+        // Act
+        var reportItem = shell.MenuItems.First(m => m.PageKey == "ManagerReports");
         shell.SelectedMenuItem = reportItem;
 
         // Assert
