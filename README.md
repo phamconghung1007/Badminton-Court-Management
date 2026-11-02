@@ -156,6 +156,27 @@
   - *"Chạy trọn vòng đời 1 booking từ Pending đến Completed; hóa đơn in/preview ra đúng số"*.
   - Toàn bộ **136/136 unit tests tự động vượt qua (100% Passed)** với các bài test trọn vòng đời `BookingLifecycleTests`, `PaymentAndMembershipTests` và `InvoiceTests`.
 
+### ✅ Ngày 7: Quản lý Khách hàng, Đặt lịch cố định (BR-18, BR-19), Khách vãng lai (A12, BR-05)
+- [x] **Quản lý Hồ sơ Khách hàng & Ràng buộc toàn vẹn (CustomerService & CustomerListPage - BR-20, BR-21)**:
+  - Danh bạ khách hàng chuyên nghiệp với KPI thống kê: Tổng số khách, Hội viên VIP/Vàng/Bạc, Khách mới trong tháng, Tổng doanh thu.
+  - Tìm kiếm linh hoạt theo Họ tên, Số điện thoại hoặc Mã thẻ.
+  - **BR-20 (Số điện thoại duy nhất)**: Bắt buộc và kiểm tra SĐT duy nhất trên toàn hệ thống trước khi thêm/sửa khách hàng.
+  - **BR-21 (Xóa mềm)**: Tuyệt đối không xóa cứng khỏi CSDL (`IsActive = false`) để bảo toàn lịch sử giao dịch điểm và đơn đặt sân.
+  - Drawer chi tiết khách hàng: Hiển thị hạng thẻ, % chiết khấu, lịch sử biến động điểm (`PointTransaction`), lịch sử đặt sân, và nút khóa/mở khóa tài khoản.
+- [x] **Đặt lịch cố định theo tuần & Tự động sinh lịch 4 tuần tới (FixedScheduleService - BR-18, BR-19, A11)**:
+  - Sinh đủ booking cho **4 tuần tiếp theo** (`FixedWeeksAhead = 4`) theo thứ trong tuần, khung giờ và sân đấu đã chọn (**BR-18**).
+  - Từng booking đều được thẩm định tự động qua toàn bộ ma trận quy tắc: **BR-01** (mốc :00/:30), **BR-02** (thời lượng 60-240p), **BR-03** (chống trùng lịch), **BR-04** (khoảng trống 30p), **BR-05** (chống quá khứ).
+  - **Cơ chế Bỏ qua tuần trùng & Báo cáo chi tiết**: Tự động bỏ qua tuần bị xung đột (trùng lịch hoặc để lại khe 30p) và thông báo danh sách ngày/tuần bị bỏ qua kèm lý do cụ thể (`SkippedDates` & `SkippedDetails`).
+  - **BR-19 (Hủy lịch cố định)**: Khi hủy lịch cố định, tự động hủy toàn bộ các booking tương lai chưa check-in (`StartTime > DateTime.Now` và trạng thái `Pending`/`Confirmed`), bảo lưu toàn vẹn các đơn đã chơi để đối soát doanh thu.
+  - Hộp thoại `FixedScheduleDialog`: Giao diện đặt lịch cố định trực quan, tích hợp chọn ngày trong tuần, giờ chơi, sân đấu và hiển thị ngay kết quả các tuần được tạo hoặc bị bỏ qua.
+- [x] **Khách vãng lai & Check-in Nhanh tại Quầy (SchedulePage - A12, BR-05)**:
+  - Nút bấm **"Khách vãng lai"** (⚡) nổi bật trên thanh công cụ Lịch sân.
+  - Tự động làm tròn thời gian hiện tại xuống mốc 30 phút gần nhất theo chuẩn **BR-05** (ví dụ 14:15 $\to$ 14:00) và chọn sân trống ngay thời điểm hiện tại.
+  - Tự động gán trạng thái ban đầu là **Đang chơi (`CheckedIn`) ngay lập tức** theo chuẩn **A12**, không yêu cầu tạo trước tài khoản hội viên.
+- [x] **Đạt tiêu chí nghiệm thu Ngày 7 (DoD Ngày 7)**:
+  - *"Tạo lịch cố định sinh đủ 4 booking, báo tuần trùng; vãng lai check-in được"*.
+  - Toàn bộ **156/156 unit tests tự động vượt qua (100% Passed)** với 20 bài test mới cho `CustomerService`, `CustomerListViewModel`, `FixedScheduleService`, và các test tích hợp DoD Ngày 7 trong `ScheduleServiceTests`.
+
 ---
 
 ## 🏗 Cấu trúc dự án
@@ -208,7 +229,7 @@ BadmintonCourtManagement/
 │   ├── Converters/                    # BoolToVisibility, MoneyConverter, StatusToBrushConverter
 │   └── Resources/                     # Colors.xaml, Styles.xaml
 └── tests/
-    └── BadmintonManager.Tests/        # 136 bài kiểm thử tự động xUnit (DoD Ngày 1, 2, 3, 4, 5, 6 100% Passed)
+    └── BadmintonManager.Tests/        # 156 bài kiểm thử tự động xUnit (DoD Ngày 1, 2, 3, 4, 5, 6, 7 100% Passed)
 ```
 
 ---
@@ -241,7 +262,7 @@ Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư m
 }
 ```
 
-### 2. Chạy toàn bộ 136 bài kiểm thử tự động (Unit Tests)
+### 2. Chạy toàn bộ 156 bài kiểm thử tự động (Unit Tests)
 ```powershell
 dotnet test
 ```
@@ -252,6 +273,16 @@ Mở solution `BadmintonCourtManagement.sln` trong Visual Studio 2022 và nhấn
 dotnet run --project BadmintonManager/BadmintonManager.csproj
 ```
 Khi ứng dụng mở:
+- **Kiểm thử DoD Ngày 7 (Lịch Cố Định & Khách Vãng Lai Check-in)**:
+  - Đăng nhập tài khoản Staff: `staff1_1` / `123456`.
+  - Mở menu **"Lịch sân chi nhánh"**:
+    - **Thao tác Khách vãng lai**: Bấm nút **"Khách vãng lai"** (⚡) trên thanh công cụ -> Hệ thống tự động làm tròn thời gian hiện tại xuống mốc 30 phút gần nhất (BR-05) và chọn sân trống -> Bấm **"Xác nhận nhận sân"** -> Đơn lập tức xuất hiện trên ma trận lịch ở trạng thái **Đang chơi (`CheckedIn`)** màu xanh lá.
+    - **Thao tác Đặt lịch cố định**: Bấm nút **"Lịch cố định"** (📅) -> Chọn ngày trong tuần, giờ chơi (ví dụ 18:00 - 20:00) và sân đấu -> Hệ thống sinh đủ 4 booking cho 4 tuần tới. Nếu có tuần nào trùng giờ hoặc vi phạm khoảng trống 30 phút, hệ thống tự động bỏ qua tuần đó và báo chi tiết lý do.
+    - **Thao tác Hủy lịch cố định (BR-19)**: Bấm vào một booking cố định trên lịch sân -> Bấm **"Hủy Toàn Bộ Lịch Cố Định"** -> Hệ thống tự động quét và hủy toàn bộ các lịch tương lai chưa check-in thuộc lịch này.
+  - Mở menu **"Quản lý Khách hàng"**:
+    - Tìm kiếm khách hàng theo Tên / SĐT / Mã thẻ.
+    - Thêm khách hàng mới với số điện thoại đã tồn tại -> Bị chặn với thông báo tiếng Việt theo chuẩn **BR-20**.
+    - Bấm nút xem chi tiết hồ sơ: Xem biến động tích điểm, danh sách các đơn đã đặt và thao tác khóa tài khoản.
 - **Kiểm thử DoD Ngày 6 (Full Lifecycle & In Hóa Đơn)**:
   - Đăng nhập tài khoản Staff: `staff1_1` / `123456`.
   - Mở menu **"Lịch sân chi nhánh"** hoặc **"Danh sách đặt sân"**.
