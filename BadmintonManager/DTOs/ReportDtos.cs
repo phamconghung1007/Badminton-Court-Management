@@ -32,3 +32,25 @@ public record TopCustomerDto(
     int TotalBookings,
     decimal TotalSpent
 );
+
+public record BranchRevenueComparisonDto(
+    int BranchId,
+    string BranchName,
+    decimal TotalRevenue,
+    int BookingCount
+);
+
+public record BranchOccupancyComparisonDto(
+    int BranchId,
+    string BranchName,
+    double UtilizationRate,
+    double BookedHours,
+    double TotalOpenHours
+);
+
+public record ReportOverviewSummaryDto(
+    decimal TotalRevenue,
+    int TotalBookings,
+    double TotalBookedHours,
+    double AverageUtilizationRate
+);
