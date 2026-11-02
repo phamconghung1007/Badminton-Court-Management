@@ -182,11 +182,7 @@ public partial class ShellViewModel : ViewModelBase
             "BookingList" => _serviceProvider.GetRequiredService<BookingListViewModel>(),
 
             "AdminReports" => _serviceProvider.GetRequiredService<AdminReportsViewModel>(),
-            "ManagerReports" => new PlaceholderPageViewModel(
-                "Báo cáo & Thống kê doanh thu",
-                "Biểu đồ trực quan LiveCharts thể hiện doanh thu theo ngày/tháng/cơ sở, tỷ lệ lấp đầy sân và xuất file Excel chuẩn EPPlus.",
-                "Ngày 7 - Báo cáo Thống kê & Xuất Excel",
-                "ChartLine"),
+            "ManagerReports" => _serviceProvider.GetRequiredService<ManagerReportsViewModel>(),
 
             _ => new PlaceholderPageViewModel(
                 pageKey,

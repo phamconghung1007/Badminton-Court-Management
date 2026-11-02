@@ -65,6 +65,9 @@
         <DataTemplate DataType="{x:Type mgrVm:ManagerStaffViewModel}">
             <pages:ManagerStaffPage />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type mgrVm:ManagerReportsViewModel}">
+            <pages:ManagerReportsPage />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type sharedVm:UserProfileViewModel}">
             <pages:UserProfilePage />
         </DataTemplate>

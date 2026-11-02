@@ -62,6 +62,7 @@ public class ShellNavigationTests
         services.AddTransient<AdminDashboardViewModel>();
         services.AddTransient<AdminReportsViewModel>();
         services.AddTransient<ManagerDashboardViewModel>();
+        services.AddTransient<ManagerReportsViewModel>();
         services.AddTransient<StaffDashboardViewModel>();
         services.AddTransient<CustomerDashboardViewModel>();
         services.AddTransient<CustomerBookCourtViewModel>();
@@ -229,7 +230,7 @@ public class ShellNavigationTests
     }
 
     [Fact]
-    public void ShellViewModel_NavigateToUpcomingFeature_ResolvesPlaceholderPageWithRoadmapTarget()
+    public void ShellViewModel_NavigateToManagerReports_ResolvesManagerReportsViewModel()
     {
         // Arrange
         var context = new CurrentUserContext();
@@ -242,9 +243,26 @@ public class ShellNavigationTests
         shell.SelectedMenuItem = reportItem;
 
         // Assert
+        shell.CurrentPageViewModel.Should().BeOfType<ManagerReportsViewModel>();
+    }
+
+    [Fact]
+    public void ShellViewModel_NavigateToUpcomingFeature_ResolvesPlaceholderPageWithRoadmapTarget()
+    {
+        // Arrange
+        var context = new CurrentUserContext();
+        context.SetUser(3, "staff1", "Staff User", UserRole.Staff, 1, "Cơ sở Cầu Giấy");
+        var sp = CreateTestServiceProvider(context);
+        var shell = sp.GetRequiredService<ShellViewModel>();
+
+        // Act
+        var createBookingItem = shell.MenuItems.First(m => m.PageKey == "CreateBooking");
+        shell.SelectedMenuItem = createBookingItem;
+
+        // Assert
         shell.CurrentPageViewModel.Should().BeOfType<PlaceholderPageViewModel>();
         var placeholder = (PlaceholderPageViewModel)shell.CurrentPageViewModel!;
-        placeholder.DayTarget.Should().Contain("Ngày 7");
+        placeholder.DayTarget.Should().Contain("Ngày 6");
     }
 
     [Fact]
