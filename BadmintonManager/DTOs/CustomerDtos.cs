@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace BadmintonManager.DTOs;
 
@@ -16,6 +17,7 @@ public record CustomerDto
     public string? MembershipCardNo { get; init; }
     public DateTime CreatedAt { get; init; }
     public bool IsActive { get; init; }
+    public string StatusText => IsActive ? "Hoạt động" : "Tạm khóa";
 }
 
 public record CustomerCreateDto(
@@ -31,3 +33,24 @@ public record CustomerUpdateDto(
     string? MembershipCardNo,
     bool IsActive
 );
+
+public record CustomerPointHistoryDto(
+    int Id,
+    int Points,
+    int BalanceAfter,
+    string Reason,
+    DateTime CreatedAt,
+    string? BookingCode
+);
+
+public record CustomerDetailDto
+{
+    public CustomerDto Customer { get; init; } = null!;
+    public int TotalBookings { get; init; }
+    public int CompletedBookings { get; init; }
+    public int CancelledBookings { get; init; }
+    public decimal TotalSpent { get; init; }
+    public List<CustomerPointHistoryDto> PointHistory { get; init; } = new();
+    public List<BookingItemDto> RecentBookings { get; init; } = new();
+    public List<FixedScheduleDto> ActiveFixedSchedules { get; init; } = new();
+}

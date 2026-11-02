@@ -501,117 +501,14 @@ public class BookingService : IBookingService
 
     public async Task<FixedScheduleResultDto> CreateFixedScheduleAsync(CreateFixedScheduleRequest request)
     {
-        await using var db = await _factory.CreateDbContextAsync();
-
-        var schedule = new FixedSchedule
-        {
-            CustomerId = request.CustomerId,
-            CourtId = request.CourtId,
-            DayOfWeek = request.DayOfWeek,
-            StartMinute = request.StartMinute,
-            EndMinute = request.EndMinute,
-            ValidFrom = request.ValidFrom,
-            ValidTo = request.ValidTo,
-            IsActive = true,
-            CreatedAt = DateTime.Now
-        };
-
-        db.FixedSchedules.Add(schedule);
-        await db.SaveChangesAsync();
-
-        int createdCount = 0;
-        var skippedDates = new List<DateOnly>();
-
-        // Generate for up to 4 weeks ahead (BR-18)
-        DateOnly current = request.ValidFrom;
-        while (current <= request.ValidTo)
-        {
-            if ((int)current.DayOfWeek == request.DayOfWeek)
-            {
-                DateTime start = current.ToDateTime(TimeOnly.MinValue).AddMinutes(request.StartMinute);
-                DateTime end = current.ToDateTime(TimeOnly.MinValue).AddMinutes(request.EndMinute);
-
-                try
-                {
-                    // Check overlap
-                    bool hasOverlap = await db.Bookings.AnyAsync(b =>
-                        b.CourtId == request.CourtId &&
-                        b.Status != BookingStatus.Cancelled &&
-                        b.StartTime < end && start < b.EndTime);
-
-                    if (hasOverlap)
-                    {
-                        skippedDates.Add(current);
-                    }
-                    else
-                    {
-                        var pricing = await _pricingService.CalculatePriceAsync(request.CourtId, start, end, request.CustomerId);
-                        string dateStr = start.ToString("yyyyMMdd");
-                        int count = await db.Bookings.CountAsync(b => b.Code.StartsWith($"BK{dateStr}")) + 1;
-
-                        var b = new Booking
-                        {
-                            Code = $"BK{dateStr}-{count:D3}",
-                            CourtId = request.CourtId,
-                            CustomerId = request.CustomerId,
-                            BookingType = BookingType.Fixed,
-                            FixedScheduleId = schedule.Id,
-                            StartTime = start,
-                            EndTime = end,
-                            Status = BookingStatus.Confirmed,
-                            SubTotal = pricing.SubTotal,
-                            DiscountPercent = pricing.DiscountPercent,
-                            DiscountAmount = pricing.DiscountAmount,
-                            FinalAmount = pricing.FinalAmount,
-                            DepositAmount = pricing.DepositAmount,
-                            CreatedByUserId = _currentUser.Id ?? 1,
-                            CreatedAt = DateTime.Now,
-                            ConfirmedByUserId = _currentUser.Id ?? 1
-                        };
-                        db.Bookings.Add(b);
-                        createdCount++;
-                    }
-                }
-                catch
-                {
-                    skippedDates.Add(current);
-                }
-            }
-            current = current.AddDays(1);
-        }
-
-        await db.SaveChangesAsync();
-
-        return new FixedScheduleResultDto
-        {
-            CreatedCount = createdCount,
-            SkippedDates = skippedDates
-        };
+        var service = new FixedScheduleService(_factory, _currentUser, _pricingService, _settingService);
+        return await service.CreateFixedScheduleAsync(request);
     }
 
     public async Task CancelFixedScheduleAsync(int scheduleId)
     {
-        await using var db = await _factory.CreateDbContextAsync();
-        var schedule = await db.FixedSchedules.FindAsync(scheduleId);
-        if (schedule == null) throw new BusinessException("Không tìm thấy lịch cố định.");
-
-        schedule.IsActive = false;
-
-        // Cancel future un-checked-in bookings (BR-19)
-        DateTime now = DateTime.Now;
-        var futureBookings = await db.Bookings
-            .Where(b => b.FixedScheduleId == scheduleId && b.StartTime > now && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed))
-            .ToListAsync();
-
-        foreach (var b in futureBookings)
-        {
-            b.Status = BookingStatus.Cancelled;
-            b.CancelledAt = now;
-            b.CancelledByUserId = _currentUser.Id ?? 1;
-            b.CancelReason = "Hủy theo toàn bộ lịch cố định";
-        }
-
-        await db.SaveChangesAsync();
+        var service = new FixedScheduleService(_factory, _currentUser, _pricingService, _settingService);
+        await service.CancelFixedScheduleAsync(scheduleId);
     }
 
     private async Task ValidateBookingTimeAsync(DateTime start, DateTime end, bool isWalkIn)
