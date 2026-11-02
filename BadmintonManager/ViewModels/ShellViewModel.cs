@@ -174,7 +174,9 @@ public partial class ShellViewModel : ViewModelBase
 
             "ScheduleGrid" => _serviceProvider.GetRequiredService<ScheduleViewModel>(),
 
-            "CreateBooking" or "CustomerBookCourt" => new PlaceholderPageViewModel(
+            "CustomerBookCourt" => _serviceProvider.GetRequiredService<CustomerBookCourtViewModel>(),
+
+            "CreateBooking" => new PlaceholderPageViewModel(
                 "Đặt sân & Check-in",
                 "Quy trình đặt sân trực tuyến và tại quầy: chọn sân, ngày giờ, tính toán tiền theo khung giờ, check-in và áp dụng mã giảm giá.",
                 "Ngày 6 - Quy trình Đặt sân & Check-in",
