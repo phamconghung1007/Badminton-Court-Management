@@ -1,0 +1,100 @@
+<Window x:Class="BadmintonManager.Views.Dialogs.FixedScheduleDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="Đăng Ký Đặt Lịch Cố Định (4 Tuần)"
+        Height="580" Width="480"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F9FAFB">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="Đăng Ký Lịch Đặt Cố Định" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                <TextBlock Text="Hệ thống tự động sinh 4 buổi chơi trong 4 tuần tới (BR-18)"
+                           FontSize="12" Foreground="#6B7280" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content Form -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="20" BorderBrush="#E5E7EB" BorderThickness="1">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- Khách hàng -->
+                    <TextBlock Text="Khách hàng" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,4"/>
+                    <TextBox x:Name="TxtCustomerName" IsReadOnly="True" FontSize="14" FontWeight="SemiBold" Foreground="#1E3A8A"
+                             Margin="0,0,0,14" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                    <!-- Sân đấu -->
+                    <TextBlock Text="Sân thi đấu *" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="CboCourts" DisplayMemberPath="DisplayName"
+                              FontSize="13" Margin="0,0,0,14" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                    <!-- Thứ trong tuần -->
+                    <TextBlock Text="Thứ trong tuần *" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="CboDayOfWeek" DisplayMemberPath="Name" SelectedValuePath="Value"
+                              FontSize="13" Margin="0,0,0,14" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                    <!-- Khung giờ bắt đầu & kết thúc -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Giờ bắt đầu *" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,4"/>
+                            <ComboBox x:Name="CboStartTime" FontSize="13" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Giờ kết thúc *" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,4"/>
+                            <ComboBox x:Name="CboEndTime" FontSize="13" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Ngày bắt đầu hiệu lực -->
+                    <TextBlock Text="Ngày bắt đầu hiệu lực *" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,4"/>
+                    <DatePicker x:Name="DpValidFrom" Margin="0,0,0,14" FontSize="13"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+
+                    <!-- Số tuần sinh -->
+                    <TextBlock Text="Số tuần sinh booking *" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="CboWeeks" FontSize="13" Margin="0,0,0,10" Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                        <ComboBoxItem Content="4 tuần tới (Chuẩn A11)" Tag="4" IsSelected="True"/>
+                        <ComboBoxItem Content="8 tuần tới (2 tháng)" Tag="8"/>
+                        <ComboBoxItem Content="12 tuần tới (3 tháng)" Tag="12"/>
+                    </ComboBox>
+
+                    <!-- Lưu ý nghiệp vụ -->
+                    <Border Background="#F0FDF4" CornerRadius="6" Padding="12,10" Margin="0,6,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Quy tắc đặt lịch cố định (BR-18):" FontWeight="Bold" FontSize="11" Foreground="#15803D"/>
+                            <TextBlock Text="• Tự động sinh lịch cho 4 tuần tới." FontSize="11" Foreground="#166534" Margin="0,2,0,0"/>
+                            <TextBlock Text="• Nếu tuần nào bị trùng giờ hoặc vi phạm khoảng trống 30 phút, hệ thống sẽ tự động bỏ qua tuần đó và thông báo chi tiết."
+                                       FontSize="11" Foreground="#166534" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Footer Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Hủy" Style="{StaticResource OutlineButtonStyle}" Click="BtnCancel_Click" Margin="0,0,10,0"/>
+            <Button x:Name="BtnConfirm" Content="Xác nhận tạo lịch cố định" Style="{StaticResource PrimaryButtonStyle}" Click="BtnConfirm_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -55,6 +55,7 @@ public class ShellNavigationTests
         services.AddTransient<IPaymentService, PaymentService>();
         services.AddTransient<IInvoiceService, InvoiceService>();
         services.AddTransient<IInvoicePrinter, InvoicePrinter>();
+        services.AddTransient<IFixedScheduleService, FixedScheduleService>();
 
         // ViewModels
         services.AddTransient<AdminDashboardViewModel>();
@@ -64,6 +65,7 @@ public class ShellNavigationTests
         services.AddTransient<UserProfileViewModel>();
         services.AddTransient<ScheduleViewModel>();
         services.AddTransient<BookingListViewModel>();
+        services.AddTransient<CustomerListViewModel>();
         services.AddTransient<ShellViewModel>();
 
         return services.BuildServiceProvider();
@@ -243,5 +245,21 @@ public class ShellNavigationTests
         context.IsAuthenticated.Should().BeFalse();
         context.Id.Should().BeNull();
         context.Username.Should().BeNull();
+    }
+
+    [Fact]
+    public void ShellViewModel_Staff_NavigatesToCustomers_ResolvesCustomerListViewModel()
+    {
+        var context = new CurrentUserContext();
+        context.SetUser(2, "staff1", "Staff User", UserRole.Staff, 1);
+        var sp = CreateTestServiceProvider(context);
+        var shell = sp.GetRequiredService<ShellViewModel>();
+
+        var menuItem = shell.MenuItems.FirstOrDefault(m => m.PageKey == "Customers");
+        menuItem.Should().NotBeNull();
+
+        shell.SelectedMenuItem = menuItem;
+
+        shell.CurrentPageViewModel.Should().BeOfType<CustomerListViewModel>();
     }
 }

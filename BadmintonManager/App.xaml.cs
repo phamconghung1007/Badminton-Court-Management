@@ -67,6 +67,7 @@ public partial class App : Application
                 services.AddTransient<BadmintonManager.ViewModels.Shared.UserProfileViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Shared.ScheduleViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Shared.BookingListViewModel>();
+                services.AddTransient<BadmintonManager.ViewModels.Shared.CustomerListViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Admin.AdminDashboardViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Admin.AdminBranchesViewModel>();
                 services.AddTransient<BadmintonManager.ViewModels.Admin.AdminCourtsViewModel>();

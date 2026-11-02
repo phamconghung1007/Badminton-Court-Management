@@ -170,11 +170,7 @@ public partial class ShellViewModel : ViewModelBase
                 "Ngày 4 - Cấu hình Bảng giá & Hạng hội viên",
                 "CardAccountDetailsStar"),
 
-            "Customers" => new PlaceholderPageViewModel(
-                "Quản lý khách hàng",
-                "Tra cứu danh bạ khách hàng qua SĐT/CCCD, xem lịch sử đặt sân, số dư điểm thưởng và cập nhật thông tin hội viên.",
-                "Ngày 4 - Quản lý Khách hàng & Hội viên",
-                "AccountGroup"),
+            "Customers" => _serviceProvider.GetRequiredService<CustomerListViewModel>(),
 
             "ScheduleGrid" => _serviceProvider.GetRequiredService<ScheduleViewModel>(),
 

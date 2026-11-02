@@ -1,0 +1,556 @@
+<UserControl x:Class="BadmintonManager.Views.Pages.CustomerListPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1100"
+             Loaded="UserControl_Loaded">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: Header & KPI Cards -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Quản Lý Khách Hàng &amp; Hội Viên"
+                           FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="Tra cứu danh bạ khách hàng, quản lý hạng thẻ, tích điểm thưởng và lịch sử đặt sân"
+                           FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Command="{Binding OpenCreateDrawerCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Height="40" Margin="0,0,10,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AccountPlus" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Thêm khách hàng" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding LoadCustomersCommand}"
+                        Style="{StaticResource OutlineButtonStyle}"
+                        Height="40">
+                    <materialDesign:PackIcon Kind="Refresh" Width="18" Height="18" VerticalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Row 1: KPI Stats & Search Bar -->
+        <Grid Grid.Row="1" Margin="0,0,0,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- KPI Cards -->
+            <UniformGrid Grid.Row="0" Columns="4" Margin="0,0,0,16">
+                <!-- Card 1: Tổng khách hàng -->
+                <Border Background="White" CornerRadius="8" Padding="16,12" Margin="0,0,8,0"
+                        BorderBrush="#E5E7EB" BorderThickness="1">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Tổng khách hàng" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalCustomerCount}" FontSize="24" FontWeight="Bold" Margin="0,4,0,0" Foreground="#1E3A8A"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Kind="AccountGroup" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#93C5FD"/>
+                    </Grid>
+                </Border>
+
+                <!-- Card 2: Đang hoạt động -->
+                <Border Background="White" CornerRadius="8" Padding="16,12" Margin="4,0,4,0"
+                        BorderBrush="#E5E7EB" BorderThickness="1">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Đang hoạt động" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding ActiveCustomerCount}" FontSize="24" FontWeight="Bold" Margin="0,4,0,0" Foreground="#10B981"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Kind="AccountCheck" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#6EE7B7"/>
+                    </Grid>
+                </Border>
+
+                <!-- Card 3: Hạng Vàng -->
+                <Border Background="White" CornerRadius="8" Padding="16,12" Margin="4,0,4,0"
+                        BorderBrush="#E5E7EB" BorderThickness="1">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Hạng Vàng (Giảm 10%)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding GoldTierCount}" FontSize="24" FontWeight="Bold" Margin="0,4,0,0" Foreground="#D97706"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Kind="Crown" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#FCD34D"/>
+                    </Grid>
+                </Border>
+
+                <!-- Card 4: Hạng Bạc -->
+                <Border Background="White" CornerRadius="8" Padding="16,12" Margin="8,0,0,0"
+                        BorderBrush="#E5E7EB" BorderThickness="1">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Hạng Bạc (Giảm 5%)" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding SilverTierCount}" FontSize="24" FontWeight="Bold" Margin="0,4,0,0" Foreground="#64748B"/>
+                        </StackPanel>
+                        <materialDesign:PackIcon Kind="ShieldStar" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#CBD5E1"/>
+                    </Grid>
+                </Border>
+            </UniformGrid>
+
+            <!-- Search Bar -->
+            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16,10"
+                    BorderBrush="#E5E7EB" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0"
+                             Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="Tìm kiếm theo Tên khách hàng, Số điện thoại, Mã thẻ, Tên đăng nhập..."
+                             FontSize="14" BorderThickness="0" VerticalAlignment="Center">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+
+                    <Button Grid.Column="1" Command="{Binding SearchCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Height="36" Padding="16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Magnify" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Tìm kiếm" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Row 2: Customer DataGrid & Side Drawers -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Main DataGrid -->
+            <Border Grid.Column="0" Background="White" CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1">
+                <DataGrid ItemsSource="{Binding Customers}"
+                          SelectedItem="{Binding SelectedCustomer}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#F3F4F6"
+                          BorderThickness="0"
+                          RowHeight="48">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50"/>
+
+                        <DataGridTemplateColumn Header="Khách hàng" Width="2*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="13" Foreground="#111827"/>
+                                        <TextBlock Text="{Binding Phone}" FontSize="12" Foreground="#6B7280"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Hạng thẻ" Width="1.2*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="12" Padding="8,3" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#F3F4F6"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding TierName}" Value="Vàng">
+                                                        <Setter Property="Background" Value="#FEF3C7"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding TierName}" Value="Bạc">
+                                                        <Setter Property="Background" Value="#F1F5F9"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding TierName}" Value="Đồng">
+                                                        <Setter Property="Background" Value="#FFEDD5"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Crown" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Foreground" Value="#6B7280"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding TierName}" Value="Vàng">
+                                                                <Setter Property="Foreground" Value="#D97706"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding TierName}" Value="Bạc">
+                                                                <Setter Property="Foreground" Value="#475569"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding TierName}" Value="Đồng">
+                                                                <Setter Property="Foreground" Value="#C2410C"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                            <TextBlock Text="{Binding TierName}" FontWeight="SemiBold" FontSize="12">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#374151"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding TierName}" Value="Vàng">
+                                                                <Setter Property="Foreground" Value="#92400E"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding TierName}" Value="Bạc">
+                                                                <Setter Property="Foreground" Value="#334155"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding TierName}" Value="Đồng">
+                                                                <Setter Property="Foreground" Value="#9A3412"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Chiết khấu" Width="90">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DiscountPercent, StringFormat='{}{0}%'}"
+                                               FontWeight="SemiBold" Foreground="#059669"
+                                               VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Điểm tích lũy" Width="1.2*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="Star" Width="14" Height="14" Foreground="#F59E0B" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock Text="{Binding TotalPoints, StringFormat='{}{0:N0} điểm'}" FontWeight="Bold" Foreground="#1E3A8A"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Mã thẻ" Binding="{Binding MembershipCardNo}" Width="110"/>
+
+                        <DataGridTemplateColumn Header="Trạng thái" Width="110">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#DCFCE7"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                        <Setter Property="Background" Value="#FEE2E2"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#15803D"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Foreground" Value="#B91C1C"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Actions Column -->
+                        <DataGridTemplateColumn Header="Thao tác" Width="170">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <!-- Chi tiết -->
+                                        <Button ToolTip="Xem chi tiết hồ sơ &amp; điểm"
+                                                Command="{Binding DataContext.ViewCustomerDetailCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignIconButton}" Width="30" Height="30" Foreground="#2563EB">
+                                            <materialDesign:PackIcon Kind="AccountDetails" Width="18" Height="18"/>
+                                        </Button>
+
+                                        <!-- Sửa -->
+                                        <Button ToolTip="Chỉnh sửa thông tin"
+                                                Command="{Binding DataContext.OpenEditDrawerCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignIconButton}" Width="30" Height="30" Foreground="#D97706">
+                                            <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"/>
+                                        </Button>
+
+                                        <!-- Đặt lịch cố định -->
+                                        <Button ToolTip="Đặt lịch cố định 4 tuần"
+                                                Command="{Binding DataContext.OpenFixedScheduleDialogCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignIconButton}" Width="30" Height="30" Foreground="#059669">
+                                            <materialDesign:PackIcon Kind="CalendarClock" Width="18" Height="18"/>
+                                        </Button>
+
+                                        <!-- Khóa / Mở khóa -->
+                                        <Button ToolTip="Khóa / Kích hoạt khách hàng"
+                                                Command="{Binding DataContext.ToggleCustomerStatusCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Width="30" Height="30">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                                    <Setter Property="Foreground" Value="#DC2626"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Foreground" Value="#16A34A"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                            <materialDesign:PackIcon Kind="LockOutline" Width="18" Height="18">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                                <Setter Property="Kind" Value="LockOpenOutline"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- Side Drawer 1: Form Thêm / Sửa khách hàng -->
+            <Border Grid.Column="1" Width="380" Background="White" Margin="16,0,0,0"
+                    CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1"
+                    Visibility="{Binding IsEditDrawerOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Drawer Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <TextBlock Text="{Binding IsEditing, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Chỉnh sửa khách hàng;Thêm mới khách hàng'}"
+                                   FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                        <Button HorizontalAlignment="Right" Style="{StaticResource MaterialDesignIconButton}"
+                                Command="{Binding CloseDrawersCommand}" Width="28" Height="28">
+                            <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Foreground="#6B7280"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Drawer Form Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,0,8,0">
+                            <!-- Error Alert -->
+                            <Border Background="#FEE2E2" CornerRadius="6" Padding="12,8" Margin="0,0,0,14"
+                                    Visibility="{Binding FormErrorMessage, Converter={StaticResource StringToVisibilityConverter}}">
+                                <TextBlock Text="{Binding FormErrorMessage}" Foreground="#B91C1C" FontSize="12" TextWrapping="Wrap"/>
+                            </Border>
+
+                            <!-- Họ và tên -->
+                            <TextBlock Text="Họ và tên khách hàng *" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding EditFullName, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Ví dụ: Nguyễn Văn An"
+                                     FontSize="14" Margin="0,0,0,14" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                            <!-- Số điện thoại -->
+                            <TextBlock Text="Số điện thoại *" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding EditPhone, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Ví dụ: 0912345678"
+                                     FontSize="14" Margin="0,0,0,14" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                            <!-- Mã thẻ hội viên -->
+                            <TextBlock Text="Mã thẻ hội viên (nếu có)" FontWeight="SemiBold" FontSize="13" Foreground="#374151" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding EditCardNo, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Ví dụ: VIP-00123"
+                                     FontSize="14" Margin="0,0,0,14" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                            <!-- Kích hoạt -->
+                            <CheckBox IsChecked="{Binding EditIsActive}"
+                                      Content="Đang hoạt động" FontWeight="SemiBold" FontSize="13"
+                                      Margin="0,6,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Drawer Footer Buttons -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Content="Hủy" Style="{StaticResource OutlineButtonStyle}"
+                                Command="{Binding CloseDrawersCommand}" Margin="0,0,10,0"/>
+                        <Button Content="Lưu thông tin" Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding SaveCustomerCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Side Drawer 2: Xem Chi Tiết Khách Hàng & Điểm Thưởng -->
+            <Border Grid.Column="1" Width="440" Background="White" Margin="16,0,0,0"
+                    CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1"
+                    Visibility="{Binding IsDetailDrawerOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Detail Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="{Binding CurrentDetail.Customer.FullName}"
+                                       FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                            <TextBlock Text="{Binding CurrentDetail.Customer.Phone, StringFormat='{}SĐT: {0}'}"
+                                       FontSize="13" Foreground="#6B7280" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Style="{StaticResource MaterialDesignIconButton}"
+                                Command="{Binding CloseDrawersCommand}" Width="28" Height="28">
+                            <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Foreground="#6B7280"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Detail Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,0,8,0">
+                            <!-- Tier and Points Banner -->
+                            <Border Background="#EFF6FF" CornerRadius="8" Padding="14,12" Margin="0,0,0,14">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Hạng thẻ hiện tại" FontSize="11" Foreground="#1E40AF"/>
+                                        <TextBlock Text="{Binding CurrentDetail.Customer.TierName}" FontSize="18" FontWeight="Bold" Foreground="#1D4ED8" Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding CurrentDetail.Customer.DiscountPercent, StringFormat='{}Chiết khấu {0}%'}" FontSize="11" Foreground="#2563EB"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                        <TextBlock Text="Điểm tích lũy" FontSize="11" Foreground="#1E40AF"/>
+                                        <TextBlock Text="{Binding CurrentDetail.Customer.TotalPoints, StringFormat='{}{0:N0} đ'}" FontSize="18" FontWeight="Bold" Foreground="#B45309" Margin="0,2,0,0"/>
+                                        <TextBlock Text="10.000đ = 1 điểm" FontSize="10" Foreground="#6B7280"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Mini KPI: Bookings & Spent -->
+                            <UniformGrid Columns="3" Margin="0,0,0,16">
+                                <Border Background="#F9FAFB" CornerRadius="6" Padding="8" Margin="0,0,4,0">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="Tổng đơn" FontSize="10" Foreground="#6B7280"/>
+                                        <TextBlock Text="{Binding CurrentDetail.TotalBookings}" FontSize="15" FontWeight="Bold" Foreground="#111827"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F9FAFB" CornerRadius="6" Padding="8" Margin="2,0,2,0">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="Hoàn tất" FontSize="10" Foreground="#6B7280"/>
+                                        <TextBlock Text="{Binding CurrentDetail.CompletedBookings}" FontSize="15" FontWeight="Bold" Foreground="#16A34A"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F9FAFB" CornerRadius="6" Padding="8" Margin="4,0,0,0">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="Tổng chi tiêu" FontSize="10" Foreground="#6B7280"/>
+                                        <TextBlock Text="{Binding CurrentDetail.TotalSpent, StringFormat='{}{0:N0} đ'}" FontSize="13" FontWeight="Bold" Foreground="#2563EB"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+
+                            <!-- Point History Section -->
+                            <TextBlock Text="Lịch sử điểm thưởng gần nhất" FontWeight="Bold" FontSize="13" Foreground="#111827" Margin="0,0,0,8"/>
+                            <Border Background="#F9FAFB" CornerRadius="6" Padding="8" Margin="0,0,0,16">
+                                <ItemsControl ItemsSource="{Binding CurrentDetail.PointHistory}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Reason}" FontSize="12" FontWeight="SemiBold" Foreground="#374151" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" FontSize="10" Foreground="#9CA3AF"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Points, StringFormat='{}+{0} điểm'}"
+                                                               FontSize="12" FontWeight="Bold" Foreground="#16A34A" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+
+                            <!-- Recent Bookings Section -->
+                            <TextBlock Text="Đơn đặt sân gần đây" FontWeight="Bold" FontSize="13" Foreground="#111827" Margin="0,0,0,8"/>
+                            <Border Background="#F9FAFB" CornerRadius="6" Padding="8">
+                                <ItemsControl ItemsSource="{Binding CurrentDetail.RecentBookings}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Code}" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A"/>
+                                                        <TextBlock Text="{Binding StartTime, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" FontSize="11" Foreground="#4B5563"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                        <TextBlock Text="{Binding FinalAmount, StringFormat='{}{0:N0} đ'}" FontSize="12" FontWeight="SemiBold" Foreground="#111827"/>
+                                                        <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="SemiBold" Foreground="#2563EB"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Detail Footer Actions -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+                        <Button Content="Đặt lịch cố định" Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding OpenFixedScheduleDialogCommand}"
+                                CommandParameter="{Binding CurrentDetail.Customer}"
+                                Margin="0,0,8,0"/>
+                        <Button Content="Đóng" Style="{StaticResource OutlineButtonStyle}"
+                                Command="{Binding CloseDrawersCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
