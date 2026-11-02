@@ -8,7 +8,7 @@
 - **Cơ sở dữ liệu**: Microsoft SQL Server
 - **Bảo mật**: `BCrypt.Net-Next` (Băm mật khẩu)
 - **Kiến trúc & DI**: `Microsoft.Extensions.Hosting` (Generic Host, Dependency Injection, `IDbContextFactory<AppDbContext>`)
-- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (191 unit tests 100% passed)
+- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (209 unit tests 100% passed)
 
 ---
 
@@ -226,6 +226,30 @@
   - Xây dựng script SQL đối soát độc lập [`scripts/verify_day9_reports.sql`](scripts/verify_day9_reports.sql) đối chiếu tay 100% khớp số liệu seed trong `BadmintonDb`.
   - Toàn bộ **191/191 unit tests tự động vượt qua (100% Passed)** với 18 bài test mới bao phủ `ReportServiceTests` (8 tests), `AdminReportsViewModelTests` (4 tests), `ManagerReportsViewModelTests` (4 tests), và cập nhật điều hướng trong `ShellNavigationTests` (2 tests).
 
+### ✅ Ngày 10: Sửa Lỗi, Kiểm Tra Checklist Mục 10, E2E Role Matrix Tests & Tự Động Hóa Nghiệm Thu Máy Mới
+- [x] **Dọn dẹp mã nguồn & Kiểm toán Checklist Mục 10 (Code Cleanup & Architecture Audit)**:
+  - Dọn dẹp sạch sẽ 100% các compiler warnings CS8604 và CS8601 trong `BranchCourtService.cs` và `InvoiceService.cs`.
+  - Kiểm toán cấu trúc bằng Reflection trong `ChecklistAuditTests.cs`: Đảm bảo **100% không gọi `MessageBox.Show()` trong ViewModel** (tuân thủ nghiêm ngặt mô hình DI với `IDialogService`).
+  - Đảm bảo **triệt tiêu hoàn toàn lỗi N+1 queries** qua việc chuẩn hóa Eager Loading (`Include` / `ThenInclude`) và `AsNoTracking()` trong toàn bộ các truy vấn báo cáo và danh sách.
+- [x] **Kiểm thử tự động Ma Trận Phân Quyền Mục 2 (13 Quyền x 4 Vai Trò - `RolePermissionMatrixTests`)**:
+  - Viết 11 kịch bản kiểm thử tích hợp E2E tự động xác thực Ma trận phân quyền Mục 2 của tài liệu đặc tả trên 4 vai trò:
+    - *Quản lý cơ sở*: Admin toàn quyền, Manager/Staff/Customer bị chặn (`ForbiddenException`).
+    - *Quản lý sân*: Admin quản lý toàn bộ, Manager chỉ quản lý sân thuộc cơ sở của mình (thao tác sân cơ sở khác bị từ chối), Staff/Customer bị chặn.
+    - *Quản lý tài khoản*: Admin quản lý mọi tài khoản; Manager chỉ được tạo Staff cơ sở mình (cấm tạo Admin/Manager và cấm can thiệp cơ sở khác).
+    - *Cấu hình giá & Hạng hội viên*: Độc quyền tối cao của Admin; Manager/Staff/Customer bị cấm can thiệp.
+    - *Tra cứu danh sách đặt sân*: Admin thấy toàn bộ; Manager/Staff chỉ thấy cơ sở mình; Customer chỉ thấy đơn của chính mình.
+    - *Duyệt đơn & Điểm danh / Thu tiền*: Nhân viên quầy và Quản lý thực hiện; cấm Khách hàng tự duyệt hoặc thu tiền.
+    - *Hủy đơn đặt sân*: Khách hàng chỉ được hủy đơn của mình (không thể hủy đơn của người khác).
+    - *Báo cáo doanh thu*: Chỉ mở cho Admin và Manager cơ sở; cấm hoàn toàn Staff và Customer.
+- [x] **Nâng cấp `DbHealthChecker.cs` & Tự Động Hóa Kiểm Chứng Máy Mới (DoD Ngày 10)**:
+  - Bổ sung `VerifyDay10FinalDoDAsync`: Kiểm tra tự động 10 chỉ tiêu sống còn của CSDL (Hạ tầng, Cơ sở, Sân, Người dùng băm BCrypt, Hạng thẻ, Bảng giá 06:00-24:00, 10 SystemSettings, 50+ bookings đủ trạng thái, Payments, Tính toàn vẹn tài chính).
+  - Tích hợp cờ dòng lệnh `--verify-day10` và `--verify-all` trong `App.xaml.cs` in báo cáo nghiệm thu chuyên nghiệp.
+  - Cung cấp script tự động hóa 1-click [scripts/Verify-FreshMachine.ps1](scripts/Verify-FreshMachine.ps1) và [scripts/Verify-FreshMachine.bat](scripts/Verify-FreshMachine.bat).
+- [x] **Đạt tiêu chí nghiệm thu Ngày 10 (DoD Ngày 10)**:
+  - *"Chạy sạch từ máy mới theo README; checklist mục 10 đạt"*.
+  - Toàn bộ **209/209 unit & E2E tests tự động vượt qua (100% Passed)**.
+  - Chạy `Verify-FreshMachine.ps1`: Đạt **10/10 tiêu chí nghiệm thu hoàn hảo**!
+
 ---
 
 ## 🏗 Cấu trúc dự án
@@ -237,13 +261,16 @@ BadmintonCourtManagement/
 │   ├── DOD_DAY6_REPORT.md            # Báo cáo nghiệm thu Ngày 6
 │   ├── DOD_DAY7_REPORT.md            # Báo cáo nghiệm thu Ngày 7
 │   ├── DOD_DAY8_REPORT.md            # Báo cáo nghiệm thu Ngày 8
-│   └── DOD_DAY9_REPORT.md            # Báo cáo nghiệm thu Ngày 9
+│   ├── DOD_DAY9_REPORT.md            # Báo cáo nghiệm thu Ngày 9
+│   └── DOD_DAY10_FINAL_REPORT.md     # Báo cáo nghiệm thu Tổng kết Toàn diện Ngày 10
 ├── scripts/
+│   ├── Verify-FreshMachine.ps1       # Script PowerShell tự động nghiệm thu máy mới từ A-Z
+│   ├── Verify-FreshMachine.bat       # File Batch Windows 1-click nghiệm thu máy mới
 │   ├── verify_day1_dod.sql           # Script SQL kiểm tra đạt tiêu chí Ngày 1 bằng SSMS
 │   ├── verify_day9_reports.sql        # Script SQL đối soát số liệu báo cáo Ngày 9
-│   └── Verify-Database.ps1           # Script PowerShell kiểm thử tự động
+│   └── Verify-Database.ps1           # Script PowerShell kiểm thử CSDL Ngày 1
 ├── BadmintonManager/
-│   ├── App.xaml / App.xaml.cs         # Host, DI, Startup, Migration, Seeder & DI Services Registration
+│   ├── App.xaml / App.xaml.cs         # Host, DI, Startup, Migration, Seeder & Command-line Flags
 │   ├── appsettings.example.json       # File mẫu cấu hình chuỗi kết nối DB
 │   ├── Models/
 │   │   ├── Entities/                  # 11 Entity: Branch, Court, AppUser, Customer, MembershipTier,
@@ -253,8 +280,8 @@ BadmintonCourtManagement/
 │   │   ├── AppDbContext.cs            # DbContext cấu hình qua Assembly Configurations, Business validation
 │   │   ├── Configurations/            # Fluent API IEntityTypeConfiguration<T> cho từng bảng
 │   │   ├── Migrations/                # EF Core Code First Migrations
-│   │   ├── DbSeeder.cs                # Seed dữ liệu mẫu (3 cơ sở, 18 sân, tài khoản, giá, settings, ~55 bookings)
-│   │   └── DbHealthChecker.cs         # Kiểm tra đạt chuẩn Definition of Done (DoD)
+│   │   ├── DbSeeder.cs                # Seed dữ liệu mẫu (3 cơ sở, 18 sân, tài khoản, giá, settings, ~56 bookings)
+│   │   └── DbHealthChecker.cs         # Kiểm tra đạt chuẩn Definition of Done (DoD Day 1 & Day 10)
 │   ├── Services/
 │   │   ├── Interfaces/                # IAuthService, IBranchCourtService, IUserService, IPricingService, IReportService...
 │   │   └── (AuthService, BranchCourtService, UserService, PricingService, MembershipService, ReportService, ...)
@@ -285,7 +312,7 @@ BadmintonCourtManagement/
 │   ├── Converters/                    # BoolToVisibility, MoneyConverter, StatusToBrushConverter
 │   └── Resources/                     # Colors.xaml, Styles.xaml
 └── tests/
-    └── BadmintonManager.Tests/        # 191 bài kiểm thử tự động xUnit (DoD Ngày 1 đến 9 100% Passed)
+    └── BadmintonManager.Tests/        # 209 bài kiểm thử tự động xUnit (DoD Ngày 1 đến 10 100% Passed)
 ```
 
 ---
@@ -308,8 +335,28 @@ BadmintonCourtManagement/
 
 ## 🚀 Hướng dẫn cài đặt & kiểm thử
 
-### 1. Cấu hình chuỗi kết nối
-Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư mục `BadmintonManager/` và cập nhật chuỗi kết nối tới SQL Server của bạn:
+### ⚡ Cài đặt & Nghiệm thu tự động trên máy mới (Day 10 DoD - 1-Click Verification)
+Chỉ cần thực hiện 1 thao tác duy nhất để hệ thống tự động: Kiểm tra .NET SDK -> Build mã nguồn -> Chạy 209 bài kiểm thử -> Migrate & Seed CSDL -> In báo cáo đạt chuẩn 10/10 tiêu chí:
+
+**Cách 1: Chạy file Batch (Khuyên dùng trên Windows - Nhấp đúp chuột):**
+```cmd
+scripts\Verify-FreshMachine.bat
+```
+
+**Cách 2: Chạy qua PowerShell:**
+```powershell
+.\scripts\Verify-FreshMachine.ps1
+```
+
+**Cách 3: Chạy trực tiếp từ .NET CLI:**
+```powershell
+dotnet run --project BadmintonManager/BadmintonManager.csproj -- --verify-day10
+```
+
+---
+
+### 1. Cấu hình chuỗi kết nối thủ công
+Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư mục `BadmintonManager/` và cập nhật chuỗi kết nối tới SQL Server của bạn (nếu dùng cấu hình riêng):
 ```json
 {
   "ConnectionStrings": {
@@ -318,7 +365,7 @@ Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư m
 }
 ```
 
-### 2. Chạy toàn bộ 191 bài kiểm thử tự động (Unit Tests)
+### 2. Chạy toàn bộ 209 bài kiểm thử tự động (Unit & E2E Role Matrix Tests)
 ```powershell
 dotnet test
 ```
@@ -329,6 +376,16 @@ Mở solution `BadmintonCourtManagement.sln` trong Visual Studio 2022 và nhấn
 dotnet run --project BadmintonManager/BadmintonManager.csproj
 ```
 Khi ứng dụng mở:
+- **Kiểm thử DoD Ngày 10 (Chạy Sạch Từ Máy Mới, Ma Trận Phân Quyền Mục 2 & Checklist Mục 10)**:
+  - Xem chi tiết tại báo cáo nghiệm thu [docs/DOD_DAY10_FINAL_REPORT.md](docs/DOD_DAY10_FINAL_REPORT.md).
+  - Kiểm thử 13 chức năng trên 4 vai trò qua bộ test E2E:
+    ```powershell
+    dotnet test --filter "FullyQualifiedName~RolePermissionMatrixTests"
+    ```
+  - Kiểm tra kiến trúc không MessageBox trong ViewModel và không N+1 queries:
+    ```powershell
+    dotnet test --filter "FullyQualifiedName~ChecklistAuditTests"
+    ```
 - **Kiểm thử DoD Ngày 9 (Báo Cáo & Thống Kê Doanh Thu, LiveCharts2 & Đối Soát SQL)**:
   - **Kiểm thử Báo cáo Quản trị viên (Admin)**:
     - Đăng nhập: `admin` / `123456`.
