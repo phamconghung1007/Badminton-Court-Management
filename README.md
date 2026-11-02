@@ -8,7 +8,7 @@
 - **Cơ sở dữ liệu**: Microsoft SQL Server
 - **Bảo mật**: `BCrypt.Net-Next` (Băm mật khẩu)
 - **Kiến trúc & DI**: `Microsoft.Extensions.Hosting` (Generic Host, Dependency Injection, `IDbContextFactory<AppDbContext>`)
-- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (136 unit tests 100% passed)
+- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (173 unit tests 100% passed)
 
 ---
 
@@ -177,12 +177,44 @@
   - *"Tạo lịch cố định sinh đủ 4 booking, báo tuần trùng; vãng lai check-in được"*.
   - Toàn bộ **156/156 unit tests tự động vượt qua (100% Passed)** với 20 bài test mới cho `CustomerService`, `CustomerListViewModel`, `FixedScheduleService`, và các test tích hợp DoD Ngày 7 trong `ScheduleServiceTests`.
 
+### ✅ Ngày 8: Customer Portal & Phân quyền bảo mật (Cross-Access Protection)
+- [x] **Bảo vệ Phân quyền & Chống Truy cập Chéo ở Tầng Service (Section 2, 4, 8 & DoD Day 8)**:
+  - **`BookingService`**:
+    - Khi `Role == "Customer"`, tự động khóa bộ lọc cứng `CustomerId == user.CustomerId`.
+    - Chặn xem, sửa, hủy (`CancelBookingAsync`), hoặc đổi lịch (`RescheduleBookingAsync`) đơn của khách khác bằng `UnauthorizedAccessException`.
+    - Chặn khách tự duyệt (`ApproveBookingAsync`), check-in (`CheckInAsync`) hoặc hoàn tất đơn.
+  - **`CustomerService`**: Khách hàng chỉ có thể xem hồ sơ của chính mình; chặn mọi hành vi tra cứu, cập nhật, xóa mềm khách khác hoặc tự cộng điểm.
+  - **`PaymentService`**: Chặn hoàn toàn vai trò `Customer` thu tiền hoặc hoàn cọc trực tiếp qua Service.
+  - **`FixedScheduleService`**: Chặn khách hàng tạo hoặc hủy lịch cố định của tài khoản khác.
+- [x] **Tìm kiếm Sân Trống & Đặt Sân Trực Tuyến (`CustomerBookCourtPage` & `CustomerBookCourtViewModel`)**:
+  - Tra cứu sân khả dụng thời gian thực (`GetAvailableCourtsAsync`) theo Chi nhánh, Ngày và Khung giờ.
+  - Tự động thẩm định qua toàn bộ quy tắc: loại bỏ sân trùng lịch (**BR-03**), loại bỏ sân để lại khoảng trống 30 phút (**BR-04**), giới hạn thời lượng 60-240 phút (**BR-02**) và chặn đặt trong quá khứ (**BR-05**).
+  - Khung **Live Pricing Preview**: Tự động chia block 30 phút, áp giá Ngày thường / Cuối tuần (**BR-07, BR-08**), trừ chiết khấu hội viên (**BR-09**), tính tiền cọc tối thiểu 30% làm tròn lên 1.000 VNĐ (**BR-11**).
+  - Tạo đơn trực tuyến ở trạng thái Chờ duyệt (`Pending`), tự động gán đúng `CustomerId`, hiển thị nhắc nhở chuyển khoản cọc trong vòng **2 giờ** theo chuẩn **A7/A8**.
+- [x] **Lịch sử Đặt Sân & Đổi/Hủy Lịch (`CustomerBookingsPage` & `CustomerBookingsViewModel`)**:
+  - Quản lý danh sách các đơn đặt sân của riêng khách hàng đăng nhập; bộ lọc trạng thái đa năng.
+  - **BR-14 (Hủy lịch)**: Tự động phát hiện hủy trước $\ge 24$ giờ (thông báo hoàn cọc 100%) hoặc hủy $< 24$ giờ (cảnh báo mất cọc).
+  - **A9 (Đổi lịch)**: Drawer trượt cho phép chọn ngày và giờ chơi mới, bắt buộc trước giờ chơi ít nhất 24 giờ.
+- [x] **Điểm thưởng, Thăng hạng & Dashboard Khách hàng (`CustomerPointsPage`, `CustomerDashboardPage`)**:
+  - Thẻ hạng hội viên (Đồng, Bạc, Vàng), số điểm tích lũy và % chiết khấu đang áp dụng (**BR-16**).
+  - Bảng lịch sử biến động điểm (`PointTransaction`) minh bạch (**BR-15**).
+  - Thanh tiến trình thăng hạng (Progress Bar) trực quan, hiển thị số điểm cần thêm để lên hạng tiếp theo.
+  - Danh sách 5 đơn đặt sân sắp diễn ra gần nhất và các nút phím tắt điều hướng nhanh.
+- [x] **Đạt tiêu chí nghiệm thu Ngày 8 (DoD Ngày 8)**:
+  - *"Customer chỉ thấy dữ liệu của mình (thử truy cập chéo bị chặn ở Service)"*.
+  - Toàn bộ **173/173 unit tests tự động vượt qua (100% Passed)** với 17 bài test mới bao phủ `CustomerAccessSecurityTests` (8 tests), `CustomerBookCourtViewModelTests` (5 tests), `CustomerBookingsViewModelTests` (3 tests), và `CustomerPointsViewModelTests` (1 test).
+
 ---
 
 ## 🏗 Cấu trúc dự án
 ```
 BadmintonCourtManagement/
 ├── BadmintonCourtManagement.sln      # Solution mở bằng Visual Studio 2022
+├── docs/                             # Báo cáo nghiệm thu Definition of Done (DoD)
+│   ├── DOD_DAY5_REPORT.md            # Báo cáo nghiệm thu Ngày 5
+│   ├── DOD_DAY6_REPORT.md            # Báo cáo nghiệm thu Ngày 6
+│   ├── DOD_DAY7_REPORT.md            # Báo cáo nghiệm thu Ngày 7
+│   └── DOD_DAY8_REPORT.md            # Báo cáo nghiệm thu Ngày 8
 ├── scripts/
 │   ├── verify_day1_dod.sql           # Script SQL kiểm tra đạt tiêu chí Ngày 1 bằng SSMS
 │   └── Verify-Database.ps1           # Script PowerShell kiểm thử tự động
@@ -214,7 +246,8 @@ BadmintonCourtManagement/
 │   │   │                              # AdminUsersViewModel, AdminPricingViewModel, AdminTiersViewModel
 │   │   ├── Manager/                   # ManagerDashboardViewModel, ManagerCourtsViewModel, ManagerStaffViewModel
 │   │   ├── Staff/                     # StaffDashboardViewModel
-│   │   ├── Customer/                  # CustomerDashboardViewModel
+│   │   ├── Customer/                  # CustomerDashboardViewModel, CustomerBookCourtViewModel,
+│   │   │                              # CustomerBookingsViewModel, CustomerPointsViewModel
 │   │   ├── Shared/                    # UserProfileViewModel
 │   │   ├── LoginViewModel.cs          # Đăng nhập hệ thống
 │   │   ├── RegisterViewModel.cs       # Đăng ký tài khoản khách hàng
@@ -223,13 +256,13 @@ BadmintonCourtManagement/
 │   │   ├── LoginWindow.xaml           # Cửa sổ đăng nhập
 │   │   ├── RegisterWindow.xaml        # Cửa sổ đăng ký khách hàng
 │   │   ├── ShellWindow.xaml           # Khung giao diện chính với Navigation Bar và Viewport
-│   │   └── Pages/                     # AdminBranchesPage, AdminCourtsPage, AdminUsersPage, AdminPricingPage, AdminTiersPage,
-│   │                                  # ManagerCourtsPage, ManagerStaffPage, UserProfilePage, Dashboards...
+│   │   └── Pages/                     # CustomerBookCourtPage, CustomerBookingsPage, CustomerPointsPage,
+│   │                                  # CustomerDashboardPage, SchedulePage, BookingListPage, CustomerListPage...
 │   ├── Infrastructure/                # NavigationService, DialogService, InvoicePrinter
 │   ├── Converters/                    # BoolToVisibility, MoneyConverter, StatusToBrushConverter
 │   └── Resources/                     # Colors.xaml, Styles.xaml
 └── tests/
-    └── BadmintonManager.Tests/        # 156 bài kiểm thử tự động xUnit (DoD Ngày 1, 2, 3, 4, 5, 6, 7 100% Passed)
+    └── BadmintonManager.Tests/        # 173 bài kiểm thử tự động xUnit (DoD Ngày 1 đến 8 100% Passed)
 ```
 
 ---
@@ -262,7 +295,7 @@ Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư m
 }
 ```
 
-### 2. Chạy toàn bộ 156 bài kiểm thử tự động (Unit Tests)
+### 2. Chạy toàn bộ 173 bài kiểm thử tự động (Unit Tests)
 ```powershell
 dotnet test
 ```
@@ -273,6 +306,16 @@ Mở solution `BadmintonCourtManagement.sln` trong Visual Studio 2022 và nhấn
 dotnet run --project BadmintonManager/BadmintonManager.csproj
 ```
 Khi ứng dụng mở:
+- **Kiểm thử DoD Ngày 8 (Customer Portal & Bảo Mật Chống Truy Cập Chéo)**:
+  - Đăng nhập tài khoản Khách hàng: `customer1` / `123456`.
+  - **Phân quyền Menu**: Khách hàng chỉ thấy 4 menu riêng biệt (Dashboard, Đặt sân trực tuyến, Lịch sử đặt sân, Điểm thưởng), ẩn toàn bộ menu quản trị của Admin, Manager, Staff.
+  - **Đặt sân trực tuyến**: Chọn cơ sở, ngày, giờ -> Bấm "Tìm sân trống" -> Thẻ card sân rảnh xuất hiện kèm Live Pricing Preview (tự động giảm 10% cho Hạng Vàng theo BR-09, tính cọc 30% làm tròn lên 1.000 VNĐ theo BR-11) -> Bấm đặt sân nhận thông báo đơn `Pending` và nhắc chuyển khoản cọc trong vòng 2 giờ (A7/A8).
+  - **Lịch sử đặt sân**: Chỉ hiển thị các booking của riêng `customer1`. Thử hủy đơn: hệ thống tự động kiểm tra mốc $\ge 24$ giờ để báo hoàn cọc hay mất cọc (BR-14). Thử đổi lịch: Drawer trượt yêu cầu trước giờ chơi $\ge 24$ giờ (A9).
+  - **Điểm thưởng & Hạng thẻ**: Xem huy hiệu Hạng Vàng, số điểm 1.600, chiết khấu 10%, tiến trình thăng hạng và bảng lịch sử biến động điểm `PointTransaction` (BR-15, BR-16).
+  - **Bảo vệ chống truy cập chéo ở Service**: Chặn đứng ở Service Layer khi khách hàng cố tra cứu hoặc can thiệp dữ liệu của khách khác (`UnauthorizedAccessException`). Kiểm thử tự động qua lệnh:
+    ```powershell
+    dotnet test --filter "FullyQualifiedName~CustomerAccessSecurityTests"
+    ```
 - **Kiểm thử DoD Ngày 7 (Lịch Cố Định & Khách Vãng Lai Check-in)**:
   - Đăng nhập tài khoản Staff: `staff1_1` / `123456`.
   - Mở menu **"Lịch sân chi nhánh"**:
