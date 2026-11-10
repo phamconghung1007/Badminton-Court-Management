@@ -18,4 +18,18 @@ public partial class LoginWindow : Window
             vm.Password = pb.Password;
         }
     }
+
+    private void QuickFillAccount_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is string username)
+        {
+            TxtUsername.Text = username;
+            TxtPassword.Password = "123456";
+            if (DataContext is LoginViewModel vm)
+            {
+                vm.Username = username;
+                vm.Password = "123456";
+            }
+        }
+    }
 }
