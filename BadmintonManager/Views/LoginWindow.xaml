@@ -41,9 +41,11 @@
                 
                 <!-- Center Login Card -->
                 <Border Width="480"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
                         Background="{StaticResource SurfaceBrush}"
                         CornerRadius="16"
-                        Padding="36,32"
+                        Padding="36,26"
                         BorderBrush="{StaticResource BorderBrush}"
                         BorderThickness="1"
                         Effect="{DynamicResource MaterialDesignElevationShadow4}">

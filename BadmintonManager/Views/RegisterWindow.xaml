@@ -15,8 +15,14 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled"
                   Focusable="False">
-        <Grid Margin="24">
-            <Border Background="{StaticResource SurfaceBrush}"
+        <Grid MinHeight="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+              VerticalAlignment="Center"
+              HorizontalAlignment="Center"
+              Margin="24">
+            <Border Width="460"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Background="{StaticResource SurfaceBrush}"
                     CornerRadius="16"
                     Padding="28"
                     BorderBrush="{StaticResource BorderBrush}"
