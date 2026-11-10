@@ -351,7 +351,7 @@
             <!-- Side Drawer 1: Form Thêm / Sửa khách hàng -->
             <Border Grid.Column="1" Width="380" Background="White" Margin="16,0,0,0"
                     CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1"
-                    Visibility="{Binding IsEditDrawerOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    Visibility="{Binding IsEditDrawerOpen, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -416,7 +416,7 @@
             <!-- Side Drawer 2: Xem Chi Tiết Khách Hàng & Điểm Thưởng -->
             <Border Grid.Column="1" Width="440" Background="White" Margin="16,0,0,0"
                     CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1"
-                    Visibility="{Binding IsDetailDrawerOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    Visibility="{Binding IsDetailDrawerOpen, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>

@@ -39,7 +39,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "  -> Bien dich thanh cong 0 loi!" -ForegroundColor Green
 
 # ------------------------------------------------------------------------------
-# BUOC 3: KIEM THU TU DONG HOA (211+ TESTS)
+# BUOC 3: KIEM THU TU DONG HOA (213+ TESTS)
 # ------------------------------------------------------------------------------
 Write-Host ""
 Write-Host "[3/4] Chay toan bo bo kiem thu tu dong hoa (xUnit unit and matrix tests)..." -ForegroundColor Cyan

@@ -29,6 +29,11 @@
     <Color x:Key="CancelledColor">#EF4444</Color>
     <Color x:Key="NoShowColor">#EA580C</Color>
 
+    <!-- State & Feedback Colors -->
+    <Color x:Key="WarningColor">#F59E0B</Color>
+    <Color x:Key="SuccessColor">#10B981</Color>
+    <Color x:Key="DangerColor">#EF4444</Color>
+
     <!-- Brushes -->
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
     <SolidColorBrush x:Key="PrimaryDarkBrush" Color="{StaticResource PrimaryDarkColor}"/>
@@ -54,4 +59,8 @@
     <SolidColorBrush x:Key="CompletedBrush" Color="{StaticResource CompletedColor}"/>
     <SolidColorBrush x:Key="CancelledBrush" Color="{StaticResource CancelledColor}"/>
     <SolidColorBrush x:Key="NoShowBrush" Color="{StaticResource NoShowColor}"/>
+
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}"/>
 </ResourceDictionary>
