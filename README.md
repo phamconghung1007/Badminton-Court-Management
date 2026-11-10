@@ -8,7 +8,7 @@
 - **Cơ sở dữ liệu**: Microsoft SQL Server
 - **Bảo mật**: `BCrypt.Net-Next` (Băm mật khẩu)
 - **Kiến trúc & DI**: `Microsoft.Extensions.Hosting` (Generic Host, Dependency Injection, `IDbContextFactory<AppDbContext>`)
-- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (209 unit tests 100% passed)
+- **Kiểm thử tự động**: xUnit, FluentAssertions, EF Core InMemory Database (211 unit tests 100% passed)
 
 ---
 
@@ -247,7 +247,7 @@
   - Cung cấp script tự động hóa 1-click [scripts/Verify-FreshMachine.ps1](scripts/Verify-FreshMachine.ps1) và [scripts/Verify-FreshMachine.bat](scripts/Verify-FreshMachine.bat).
 - [x] **Đạt tiêu chí nghiệm thu Ngày 10 (DoD Ngày 10)**:
   - *"Chạy sạch từ máy mới theo README; checklist mục 10 đạt"*.
-  - Toàn bộ **209/209 unit & E2E tests tự động vượt qua (100% Passed)**.
+  - Toàn bộ **211/211 unit & E2E tests tự động vượt qua (100% Passed)**.
   - Chạy `Verify-FreshMachine.ps1`: Đạt **10/10 tiêu chí nghiệm thu hoàn hảo**!
 
 ---
@@ -312,7 +312,7 @@ BadmintonCourtManagement/
 │   ├── Converters/                    # BoolToVisibility, MoneyConverter, StatusToBrushConverter
 │   └── Resources/                     # Colors.xaml, Styles.xaml
 └── tests/
-    └── BadmintonManager.Tests/        # 209 bài kiểm thử tự động xUnit (DoD Ngày 1 đến 10 100% Passed)
+    └── BadmintonManager.Tests/        # 211 bài kiểm thử tự động xUnit (DoD Ngày 1 đến 10 100% Passed)
 ```
 
 ---
@@ -336,7 +336,7 @@ BadmintonCourtManagement/
 ## 🚀 Hướng dẫn cài đặt & kiểm thử
 
 ### ⚡ Cài đặt & Nghiệm thu tự động trên máy mới (Day 10 DoD - 1-Click Verification)
-Chỉ cần thực hiện 1 thao tác duy nhất để hệ thống tự động: Kiểm tra .NET SDK -> Build mã nguồn -> Chạy 209 bài kiểm thử -> Migrate & Seed CSDL -> In báo cáo đạt chuẩn 10/10 tiêu chí:
+Chỉ cần thực hiện 1 thao tác duy nhất để hệ thống tự động: Kiểm tra .NET SDK -> Build mã nguồn -> Chạy 211 bài kiểm thử -> Migrate & Seed CSDL -> In báo cáo đạt chuẩn 10/10 tiêu chí:
 
 **Cách 1: Chạy file Batch (Khuyên dùng trên Windows - Nhấp đúp chuột):**
 ```cmd
@@ -365,7 +365,7 @@ Sao chép file `appsettings.example.json` thành `appsettings.json` trong thư m
 }
 ```
 
-### 2. Chạy toàn bộ 209 bài kiểm thử tự động (Unit & E2E Role Matrix Tests)
+### 2. Chạy toàn bộ 211 bài kiểm thử tự động (Unit & E2E Role Matrix Tests)
 ```powershell
 dotnet test
 ```

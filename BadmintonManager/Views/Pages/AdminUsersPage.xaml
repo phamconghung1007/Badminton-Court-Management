@@ -193,7 +193,7 @@
                                                 Command="{Binding DataContext.OpenResetPasswordCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}"
                                                 Width="30" Height="30">
-                                            <materialDesign:PackIcon Kind="KeyReset" Foreground="{StaticResource AccentBrush}"/>
+                                            <materialDesign:PackIcon Kind="LockReset" Foreground="{StaticResource AccentBrush}"/>
                                         </Button>
 
                                         <Button Style="{StaticResource MaterialDesignIconButton}"

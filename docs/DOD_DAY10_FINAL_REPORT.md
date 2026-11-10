@@ -4,7 +4,7 @@
 > **Học phần:** PRN212 - C# & .NET Core / WPF / Entity Framework Core  
 > **Tiêu chuẩn nghiệm thu Day 10:** *"Chạy sạch từ máy mới theo README; checklist mục 10 đạt"*  
 > **Trạng thái:** ✅ **HOÀN THÀNH 100% - ĐẠT CHUẨN XUẤT SẮC**  
-> **Tổng số bài kiểm thử tự động:** **209 / 209 Tests Passed (100%)**
+> **Tổng số bài kiểm thử tự động:** **211 / 211 Tests Passed (100%)**
 
 ---
 
@@ -21,7 +21,7 @@
 | **Day 7** | Thanh toán, Tính toán tích điểm hội viên (BR-16), Tự động nâng hạng (BR-09), Xuất hóa đơn in nhiệt 80mm. | Đơn Completed tăng điểm cho khách; hóa đơn hiển thị đủ chi tiết. | ✅ ĐẠT | 151 tests |
 | **Day 8** | Customer Portal: Khách hàng tự đặt sân online (Pending), Quản lý lịch sử đặt sân, Tra cứu tích điểm & chiết khấu. | Customer chỉ thấy dữ liệu của mình (thử truy cập chéo bị chặn). | ✅ ĐẠT | 173 tests |
 | **Day 9** | Báo cáo Doanh thu & Hiệu suất lấp đầy sân (LiveCharts2), So sánh 3 cơ sở (Admin), Khóa chi nhánh (Manager). | Số liệu báo cáo khớp với dữ liệu seed khi đối chiếu tay bằng SQL. | ✅ ĐẠT | 191 tests |
-| **Day 10** | Dọn dẹp cảnh báo, Rà soát Checklist Mục 10, E2E Role Matrix Tests (13 chức năng x 4 roles), Fresh-Machine tool. | Chạy sạch từ máy mới theo README; checklist mục 10 đạt. | ✅ ĐẠT | **209 tests** |
+| **Day 10** | Dọn dẹp cảnh báo, Rà soát Checklist Mục 10, E2E Role Matrix Tests (13 chức năng x 4 roles), Fresh-Machine tool, XAML static validation. | Chạy sạch từ máy mới theo README; checklist mục 10 đạt. | ✅ ĐẠT | **211 tests** |
 
 ---
 
@@ -120,5 +120,5 @@ Hệ thống đã triển khai và kiểm chứng 100% bằng code kiểm thử 
 Dự án **Badminton Court Management System** đã hoàn thành xuất sắc toàn bộ 10 ngày lộ trình theo đúng tài liệu đặc tả đồ án:
 - Kiến trúc phần mềm chuẩn mực: WPF MVVM, Generic Host, Dependency Injection, DbContextFactory.
 - 0 lỗi biên dịch, 0 compiler warnings, 0 MessageBox trong ViewModel, 0 lỗi N+1 queries.
-- Bộ kiểm thử tự động hóa 209 bài test phủ kín toàn bộ luồng nghiệp vụ phức tạp.
+- Bộ kiểm thử tự động hóa 211 bài test phủ kín toàn bộ luồng nghiệp vụ phức tạp.
 - Hệ thống sẵn sàng đưa vào vận hành thực tế và bảo vệ đồ án tốt nghiệp với số điểm tối đa!
